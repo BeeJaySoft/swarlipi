@@ -1,0 +1,422 @@
+/* Metrics-only faces for the editor's transparent live input: no outlines,
+   just per-character advances equal to the rendered widths, so the native
+   caret sits exactly on the rendered glyphs (see scripts/build-metrics-fonts.py). */
+@font-face {
+  font-family: 'Swarlipi Metrics Gurmukhi';
+  src: url('./metrics/SwarlipiMetrics-Gurmukhi.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Swarlipi Metrics Devanagari';
+  src: url('./metrics/SwarlipiMetrics-Devanagari.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Swarlipi Metrics Bengali';
+  src: url('./metrics/SwarlipiMetrics-Bengali.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Swarlipi Metrics Latin';
+  src: url('./metrics/SwarlipiMetrics-Latin.woff2') format('woff2');
+}
+
+/**
+ * Styles for the swarlipi renderer output. Framework-agnostic:
+ * - apply swarlipiWrapperClass(lang) to the element receiving the HTML
+ * - everything is em-based (scales with font-size) and uses currentColor
+ * - letter fonts default to Noto script faces but are NOT fetched here;
+ *   the consumer delivers them (self-hosted subsets, Google Fonts, or
+ *   system fonts via the fallback stacks below)
+ */
+
+.sl-wrap {
+  font-family: var(--font-sl, sans-serif);
+  /* A monoline notation face reads heavy and wide; 500 at a slight bump is the
+     optical match for its "normal". Hosts map their bold preference to the
+     sl-bold class. */
+  font-weight: 500;
+  /* Optical scale vs the host's base size — exposed as a unitless variable
+     so host print/fit rules can multiply it back (see the app's
+     .notation-fit-inner print rule). */
+  /* The glide's stroke weight, DERIVED rather than hand-computed: the mark
+     zone's height times the fraction of it MK_W_PATH's bar fills. The ratio
+     mirrors MEEND_BAR_RATIO in index.ts (a test there fails if the two
+     drift). The ghaseet bracket's border resolves to the same weight, so one
+     span never mixes two, and its bridge measures that border. */
+  --sl-mz-h: 0.34em;
+  --sl-bar-ratio: 0.375;
+  --sl-bar: calc(var(--sl-mz-h) * var(--sl-bar-ratio));
+  /* Ghaseet bracket leg length, below the bar. */
+  --sl-mbr-leg: 0.165em;
+  /* The W tick: two dashes hanging under the bar. Named separately because
+     --sl-tick-reach sums them, and the bar line below subtracts that sum — so
+     moving a dash moves the bar with it instead of silently putting the lower
+     dash back on the taar dot. */
+  --sl-tick-top: 0.14em;
+  --sl-tick-gap: 0.13em;
+  --sl-tick-h: 0.09em;
+  /* How far the lower dash reaches below the zone's top. */
+  --sl-tick-reach: calc(
+    var(--sl-tick-top) + var(--sl-tick-gap) + var(--sl-tick-h)
+  );
+  /* The meend bar line, DERIVED from each script's dot line rather than hand
+     set. This is the reference design's rule: in the Omenad faces every meend
+     marker (q w e W Q E) occupies ONE band whose bottom is exactly the taar
+     dot's top, and the W tick hangs inside that band — which is why the bar
+     never has to move for a tick. So the bar sits the tick's whole reach above
+     the dot line, plus ~1px of clearance at the 17px read view. Every meend
+     therefore sits at ONE height, ticked or not. */
+  --sl-mbr-top: calc(
+    var(--sl-dot-a-top, -0.24em) - var(--sl-tick-reach) - 0.06em
+  );
+  --sl-scale: 1.08;
+  font-size: calc(1em * var(--sl-scale));
+  line-height: 1.9;
+}
+.sl-wrap.sl-bold {
+  font-weight: 700;
+}
+
+/* Per-script font + mark calibration. Marks are positioned in em units
+   relative to each script's letter box; --sl-mat-dot is the canvas-measured
+   center of the Ni consonant within the letter+bihari pair. */
+/* --sl-dot-a-top: ONE fixed dot line per script (canvas-measured to clear
+   the tallest centered ink — ਰੇ hora / रे-नी matras) so the upper dot sits
+   at the same height on every note. It is also the ONLY hand-set mark line:
+   the meend bar derives from it (see --sl-mbr-top below). */
+.sl-punjabi {
+  --font-sl-live: 'Swarlipi Metrics Gurmukhi';
+  --font-sl: 'Noto Sans Gurmukhi', sans-serif;
+  /* Dot lines are set for >=1px clearance over the tallest ink (ਰੇ hora /
+     ਨੀ bihari) AT THE READ VIEW'S 17px, where the dot's border snaps up a
+     pixel and eats any sub-pixel gap; the meend zone lifts by the same
+     amount so the bar keeps clearing the dot. */
+  --sl-dot-a-top: -0.38em;
+  --sl-dot-b-bot: -0.12em;
+  /* Tivra bar sits between the letter and the dot line: ~0.09em above the
+     ਮ headline, ~0.04em under the dot. */
+  --sl-tivra-top: -0.17em;
+  --sl-underline-off: 0.08em;
+  /* arc-gap = mandra-dot overhang (|dot-b-bot|) + 0.04em so the arc's
+     crest clears the lower dot instead of running under it. */
+  --sl-arc-gap: 0.16em;
+  --sl-mat-dot: 35.5%;
+}
+.sl-hindi {
+  --font-sl-live: 'Swarlipi Metrics Devanagari';
+  --font-sl: 'Noto Sans Devanagari', sans-serif;
+  /* नी bihari is the tallest Devanagari ink — clears it by ~1px at 17px. */
+  --sl-dot-a-top: -0.44em;
+  --sl-dot-b-bot: -0.15em;
+  --sl-tivra-top: -0.23em;
+  --sl-underline-off: 0.1em;
+  --sl-arc-gap: 0.19em;
+  --sl-mat-dot: 34%;
+}
+.sl-bangla {
+  --font-sl-live: 'Swarlipi Metrics Bengali';
+  --font-sl: 'Noto Sans Bengali', sans-serif;
+  /* Bengali ী (নী) rises ~0.14em above every other letter — a uniform line
+     clearing it would float the dots 0.4em over রে/প. Exception to the
+     one-line rule: only Ni's dot (via .sl-mat) takes the higher line. */
+  --sl-dot-a-top: -0.3em;
+  --sl-mat-dot-top: -0.44em;
+  --sl-dot-b-bot: -0.15em;
+  --sl-tivra-top: -0.12em;
+  --sl-tivra-h: 0.2em;
+  --sl-underline-off: 0.1em;
+  --sl-arc-gap: 0.19em;
+  --sl-mat-dot: 34.5%;
+}
+.sl-english {
+  --font-sl-live: 'Swarlipi Metrics Latin';
+  /* Explicit stack — `inherit` would pick up an ancestor's notation font
+     (e.g. a notation face on .note-value) and defeat the swarlipi render. */
+  --font-sl: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+  --sl-dot-a-top: -0.24em;
+  --sl-dot-b-bot: -0.1em;
+  --sl-tivra-top: -0.06em;
+  --sl-tivra-h: 0.2em;
+  --sl-underline-off: 0.08em;
+  --sl-arc-gap: 0.14em;
+}
+
+.sl-wrap .sl-n {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+  /* Above the chhand arc, so mandra dots and underlines sit ON the arc
+     instead of being painted over. */
+  z-index: 1;
+}
+/* A meend wrap counts as a letter for tracking: it holds the note the glide
+   leaves from, so without these the gap beside it collapses and one pair in a
+   beat sets tighter than its neighbours. */
+.sl-wrap .sl-n + .sl-n,
+.sl-wrap .sl-kan + .sl-n,
+.sl-wrap .sl-n + .sl-kan,
+.sl-wrap .sl-n + .sl-bol,
+.sl-wrap .sl-bol + .sl-n,
+.sl-wrap .sl-n + .sl-meend,
+.sl-wrap .sl-meend + .sl-n,
+.sl-wrap .sl-kan + .sl-meend,
+.sl-wrap .sl-meend + .sl-kan,
+.sl-wrap .sl-bol + .sl-meend,
+.sl-wrap .sl-meend + .sl-bol,
+.sl-wrap .sl-meend + .sl-meend {
+  margin-left: 0.05em;
+}
+.sl-wrap .sl-komal {
+  text-decoration: underline;
+  /* Matches the tivra bar's weight so komal and tivra read as one system. */
+  text-decoration-thickness: 0.08em;
+  text-decoration-skip-ink: none;
+  text-underline-offset: var(--sl-underline-off, 0.08em);
+}
+/* All marks draw with BORDER ink, never background/box-shadow — print strips
+   CSS backgrounds unless the user enables "background graphics", and these
+   marks carry musical meaning (see the watermark-print lesson). */
+.sl-wrap .sl-tivra {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: var(--sl-tivra-top, -0.04em);
+  width: 0.08em;
+  height: var(--sl-tivra-h, 0.26em);
+  line-height: 0;
+}
+/* W stroke tick: two crisp dashes hanging from the meend bar — border ink
+   via pseudo-elements so they print. */
+.sl-wrap .sl-mtick {
+  position: absolute;
+  /* Shares the octave dot's column (see --sl-dx): on a Ni both centre on the
+     consonant, everywhere else this resolves to a plain 50%. */
+  left: var(--sl-dx, 50%);
+  top: calc(var(--sl-mbr-top) + var(--sl-tick-top));
+  width: 0;
+  height: 0;
+}
+.sl-wrap .sl-mtick > svg {
+  position: absolute;
+  left: -0.065em;
+  /* Explicit em size, plus the ink props the tivra bar shares below: .sl-mtick
+     is a 0x0 positioning anchor, so a `width/height: 100%` grouped in with
+     tivra would collapse these dashes to nothing. */
+  width: 0.13em;
+  height: var(--sl-tick-h);
+  display: block;
+  fill: currentColor;
+  overflow: visible;
+}
+.sl-wrap .sl-mtick > svg:first-child {
+  top: 0;
+}
+/* The lower of the two dashes. Its offset is part of the tick's total reach,
+   which --sl-mbr-top subtracts to place the bar (see --sl-tick-reach), so the
+   bar follows automatically if this moves. */
+.sl-wrap .sl-mtick > svg:last-child {
+  top: var(--sl-tick-gap);
+}
+/* Dot size follows the traditional ink (~0.146em on a shorter letter) scaled to the
+   Noto letter height — clearly visible, not decorative. The dot itself is an
+   SVG circle (see index.ts DOT_SVG): vector fill prints and never snaps
+   per side the way a border ring did. */
+.sl-wrap .sl-dot {
+  position: absolute;
+  left: calc(var(--sl-dx, 50%) + var(--sl-pair, 0em));
+  transform: translateX(-50%);
+  width: 0.15em;
+  height: 0.15em;
+  line-height: 0;
+}
+.sl-wrap .sl-tivra > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  overflow: visible;
+}
+.sl-wrap .sl-dot > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: currentColor;
+  /* The circle touches the viewBox edge; at a fractional position the
+     viewport clip rasterizes a pixel inside it on one side (flat-sided dots
+     in PDFs). No clip — the circle never exceeds its box anyway. */
+  overflow: visible;
+}
+/* Ati pair: two identical sibling dots offset around the center. */
+.sl-wrap .sl-p1 {
+  --sl-pair: -0.105em;
+}
+.sl-wrap .sl-p2 {
+  --sl-pair: 0.105em;
+}
+/* Grace notes are 0.6em — bump the dot so it stays legible. */
+.sl-wrap .sl-kan .sl-dot {
+  width: 0.19em;
+  height: 0.19em;
+}
+.sl-wrap .sl-kan .sl-p1 {
+  --sl-pair: -0.13em;
+}
+.sl-wrap .sl-kan .sl-p2 {
+  --sl-pair: 0.13em;
+}
+.sl-wrap .sl-dot-a {
+  top: var(--sl-dot-a-top, -0.1em);
+}
+.sl-wrap .sl-dot-b {
+  bottom: var(--sl-dot-b-bot, -0.12em);
+}
+/* Ni (letter + bihari matra): the octave dot marks the CONSONANT, not the full
+   letter+matra width — the matra is the vowel sign, and the consonant is both
+   the note and the letter's optical mass. Declared on the NOTE so the W tick
+   inherits the same column and the two stack, instead of the dot sitting at
+   ~35% while a hard-centred tick sits at 50%. */
+.sl-wrap .sl-mat {
+  --sl-dx: var(--sl-mat-dot, 35%);
+}
+.sl-wrap .sl-mat > .sl-dot-a {
+  top: var(--sl-mat-dot-top, var(--sl-dot-a-top, -0.1em));
+}
+/* Bengali's Ni takes a dot line 0.14em higher than every other letter (see
+   --sl-mat-dot-top), which would put it INTO the tick's band. The bar no
+   longer moves for a tick, so this is load-bearing rather than a nicety: a
+   ticked Ni must drop back to the normal dot line or the dash lands on it. */
+.sl-wrap .sl-mat:has(.sl-mtick) > .sl-dot-a {
+  top: var(--sl-dot-a-top, -0.1em);
+}
+/* Editor live preview: kan at full size with its braces visible (see the
+   kanInline render option). */
+.sl-wrap .sl-brace {
+  display: inline-block;
+  /* 0.52 wrapper-em = the metrics fonts' brace advance; the brace itself is
+     set at 0.8em, so its own em is 0.8 of the wrapper's. */
+  width: 0.65em;
+  text-align: center;
+  opacity: 0.55;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8em;
+}
+/* The editor's live input: same box as the wrapper, metrics face so the caret
+   advances match the rendered glyphs; the text itself is transparent. */
+.sl-wrap.sl-live {
+  font-family: var(--font-sl-live, monospace);
+  letter-spacing: 0;
+}
+.sl-wrap .sl-kan {
+  font-size: 0.6em;
+  vertical-align: 0.55em;
+  line-height: 1;
+  margin-left: 0.1em;
+  margin-right: 0.02em;
+}
+.sl-wrap .sl-kan:first-child {
+  margin-left: 0;
+}
+.sl-wrap .sl-ch {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+}
+.sl-wrap .sl-arc {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  /* Top-anchored: the arc's crest sits a fixed gap below the letter box,
+     clearing the komal underline and mandra dots, whatever the arc height. */
+  top: calc(100% + var(--sl-arc-gap, 0.06em));
+  fill: currentColor;
+}
+/* Layakari nesting (` ! ~ enclosing inner groups): the outer arc drops
+   below the inner arcs instead of sharing their crest line. */
+.sl-wrap .sl-ch:has(> .sl-ch) > .sl-arc {
+  top: calc(100% + var(--sl-arc-gap, 0.06em) + 0.36em);
+}
+.sl-wrap .sl-meend {
+  position: relative;
+  display: inline-block;
+  z-index: 1;
+  /* Match .sl-n so the mark zone anchors to the same box as note marks —
+     inherited 1.9 line-height would float the arch ~0.45em too high. */
+  line-height: 1;
+}
+/* Standalone marker piece: its bar bleeds edge-to-edge so adjacent pieces
+   (s q e m, q w e) read as one continuous stroke. */
+.sl-wrap .sl-pc .sl-mz {
+  left: 0;
+  right: 0;
+}
+/* Meend mark zone: q/e hook outlines at fixed em size, the w bar
+   stretched between them. The bar occupies the top --sl-bar-ratio of it. */
+.sl-wrap .sl-mz {
+  position: absolute;
+  left: 1%;
+  right: 1%;
+  height: var(--sl-mz-h);
+  top: var(--sl-mbr-top);
+}
+.sl-wrap .sl-mk {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  fill: currentColor;
+}
+.sl-wrap .sl-mk-l {
+  left: 0;
+  width: 0.38em;
+}
+.sl-wrap .sl-mk-r {
+  right: 0;
+  width: 0.38em;
+}
+.sl-wrap .sl-mk-b {
+  left: 0;
+  width: 100%;
+}
+.sl-wrap .sl-mk-b.sl-has-l {
+  left: 0.34em;
+  width: calc(100% - 0.34em);
+}
+.sl-wrap .sl-mk-b.sl-has-r {
+  width: calc(100% - 0.34em);
+}
+.sl-wrap .sl-mk-b.sl-has-l.sl-has-r {
+  width: calc(100% - 0.68em);
+}
+/* Ghaseet: square bracket; -open variants are the cross-beat pieces with
+   the missing side left open. */
+.sl-wrap .sl-mbr {
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  /* Legs measured from the bar's underside, so a heavier --sl-bar thickens the
+     stroke without eating into them (box-sizing is border-box app-wide). */
+  height: calc(var(--sl-mbr-leg) + var(--sl-bar));
+  top: var(--sl-mbr-top);
+  border: var(--sl-bar) solid currentColor;
+  border-bottom: none;
+}
+.sl-wrap .sl-mbr.sl-open-r {
+  border-right: none;
+  right: -2%;
+}
+.sl-wrap .sl-mbr.sl-open-l {
+  border-left: none;
+  left: -2%;
+}
+.sl-wrap .sl-bol {
+  position: relative;
+  display: inline-block;
+  line-height: 1;
+}
+.sl-wrap .sl-dash {
+  margin-left: 0.1em;
+  margin-right: 0.02em;
+}
+/* Narrow line-box placeholder inside a standalone meend fragment piece —
+   gives the mark zone the same letter-height anchor as over real notes. */
+.sl-wrap .sl-ph {
+  display: inline-block;
+  width: 0.45em;
+}
