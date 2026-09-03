@@ -177,6 +177,11 @@ function noteHtml(
   // on the consonant, not the full letter+matra width.
   const hasTrailingMatra =
     (swara === 'n' || swara === 'N') && lang !== 'english';
+  // Bangla's Re is the mirror case: ে is pre-base, so র sits in the right half
+  // and its dot shifts right (offset + derivation on --sl-matp-dot). Bangla
+  // only — ਰੇ and रे take an above-base matra of zero advance, so their
+  // consonant is already centred.
+  const hasLeadingMatra = (swara === 'r' || swara === 'R') && lang === 'bangla';
 
   // Ati (double) octaves render TWO real dot elements — identical siblings
   // can never misalign, unlike a pseudo-element twin.
@@ -186,7 +191,7 @@ function noteHtml(
   if (octave) marks += octaveMarks(octave);
 
   const extra = ctx.noteClass?.(swara, octave);
-  const cls = `sl-n${isKomal ? ' sl-komal' : ''}${hasTrailingMatra ? ' sl-mat' : ''}${extra ? ` ${extra}` : ''}`;
+  const cls = `sl-n${isKomal ? ' sl-komal' : ''}${hasTrailingMatra ? ' sl-mat' : ''}${hasLeadingMatra ? ' sl-matp' : ''}${extra ? ` ${extra}` : ''}`;
   return `<span class="${cls}"${attrs}>${letter}${marks}</span>`;
 }
 

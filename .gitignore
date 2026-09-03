@@ -1,2 +1,5 @@
 # Noto source downloads for scripts/build-metrics-fonts.py
 .noto-cache/
+
+# Python bytecode from the metrics build
+__pycache__/

@@ -65,9 +65,29 @@ describe('renderSwarlipi — letters and marks', () => {
     expect(ati).toContain('sl-p2');
   });
 
+  // Real class-token membership. `toContain` would be useless here, since
+  // `sl-matp` contains `sl-mat`; a `\b` regex is no fix either, because `-` is
+  // a non-word character, so it also matches `sl-mat-dot` and `x-sl-mat` —
+  // and ctx.noteClass appends host classes into this same attribute.
+  const hasClass = (html: string, name: string): boolean =>
+    [...html.matchAll(/class="([^"]*)"/g)].some((m) =>
+      (m[1] ?? '').split(/\s+/).includes(name)
+    );
+
   it('tags Ni with sl-mat so dots center on the consonant (not english)', () => {
-    expect(renderSwarlipi('nu', 'punjabi')).toContain('sl-mat');
-    expect(renderSwarlipi('nu', 'english')).not.toContain('sl-mat');
+    expect(hasClass(renderSwarlipi('nu', 'punjabi'), 'sl-mat')).toBe(true);
+    expect(hasClass(renderSwarlipi('nu', 'english'), 'sl-mat')).toBe(false);
+  });
+
+  it('tags Bangla Re with sl-matp — a pre-base matra puts the consonant right', () => {
+    expect(hasClass(renderSwarlipi('ru', 'bangla'), 'sl-matp')).toBe(true);
+    expect(hasClass(renderSwarlipi('Ru', 'bangla'), 'sl-matp')).toBe(true);
+    // Bangla only — the other scripts' Re matra is above-base, zero advance.
+    for (const lang of ['punjabi', 'hindi', 'english'] as SwarlipiScript[])
+      expect(hasClass(renderSwarlipi('ru', lang), 'sl-matp')).toBe(false);
+    // Mutually exclusive, or Ni's dot would swing right instead of left.
+    expect(hasClass(renderSwarlipi('nu', 'bangla'), 'sl-mat')).toBe(true);
+    expect(hasClass(renderSwarlipi('nu', 'bangla'), 'sl-matp')).toBe(false);
   });
 
   it('escapes characters with no notation meaning', () => {
@@ -579,5 +599,36 @@ describe('MEEND_BAR_RATIO', () => {
     const declared = /--sl-bar-ratio:\s*([\d.]+)\s*;/.exec(css);
     expect(declared).not.toBeNull();
     expect(Number(declared![1])).toBeCloseTo(MEEND_BAR_RATIO, 10);
+  });
+});
+
+describe('octave dot columns', () => {
+  const css = readFileSync(new URL('./index.css', import.meta.url), 'utf-8');
+
+  it('pins the Bangla Re column to the consonant centre, not just past 50%', () => {
+    // Advances from metrics/SwarlipiMetrics-Bengali.woff2, which this repo
+    // ships and build-metrics-fonts.py builds at its pinned WEIGHT = 500 — the
+    // weight .sl-wrap paints at. A pre-base matra puts the consonant last, so
+    // its centre is (matra + consonant/2) / cluster. Tight tolerance on
+    // purpose: the point is to reject the 66.8% that an OS fallback face
+    // produces, and the 68.9% of the wrong (400) weight, both of which a
+    // `> 50` range check passed happily.
+    const CLUSTER = 971; // রে
+    const RA = 598; // র
+    const EKAR = CLUSTER - RA;
+    const expected = ((EKAR + RA / 2) / CLUSTER) * 100;
+    const bangla = /\.sl-bangla \{([^}]*)\}/.exec(css);
+    const declared = /--sl-matp-dot:\s*([\d.]+)%/.exec(bangla?.[1] ?? '');
+    expect(declared).not.toBeNull();
+    expect(Number(declared?.[1])).toBeCloseTo(expected, 1);
+  });
+
+  it('pairs each matra rule with the offset it reads', () => {
+    expect(css).toMatch(
+      /\.sl-wrap \.sl-mat \{[^}]*--sl-dx:\s*var\(--sl-mat-dot/
+    );
+    expect(css).toMatch(
+      /\.sl-wrap \.sl-matp \{[^}]*--sl-dx:\s*var\(--sl-matp-dot/
+    );
   });
 });

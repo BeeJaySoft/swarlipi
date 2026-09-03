@@ -125,6 +125,13 @@
   --sl-underline-off: 0.1em;
   --sl-arc-gap: 0.19em;
   --sl-mat-dot: 34.5%;
+  /* রে only: ে is pre-base, so র sits right of centre. Derived from advances
+     this repo already ships — metrics/SwarlipiMetrics-Bengali.woff2, built by
+     scripts/build-metrics-fonts.py at its pinned WEIGHT = 500, which is the
+     weight .sl-wrap paints at: রে (`r`) 971, র (`'`) 598, so ে is 373 and র's
+     centre is (373 + 598/2) / 971 = 69.2%. Re-derive from that face, never
+     from whatever the OS substitutes: a fallback Bengali face reads 66.8%. */
+  --sl-matp-dot: 69.2%;
 }
 .sl-english {
   --font-sl-live: 'Swarlipi Metrics Latin';
@@ -275,6 +282,13 @@
    ~35% while a hard-centred tick sits at 50%. */
 .sl-wrap .sl-mat {
   --sl-dx: var(--sl-mat-dot, 35%);
+}
+/* The mirror of .sl-mat: a pre-base matra puts the vowel sign LEFT, so the
+   consonant — the note, and the letter's optical mass — sits in the right half.
+   Bangla রে is the only such case in the four scripts; the offset and its
+   derivation live on --sl-matp-dot. */
+.sl-wrap .sl-matp {
+  --sl-dx: var(--sl-matp-dot, 50%);
 }
 .sl-wrap .sl-mat > .sl-dot-a {
   top: var(--sl-mat-dot-top, var(--sl-dot-a-top, -0.1em));
