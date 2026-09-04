@@ -110,6 +110,13 @@
   --sl-mbr-top: calc(
     var(--sl-dot-a-top, -0.24em) - var(--sl-tick-reach) - 0.06em
   );
+  /* The tivra bar, DERIVED from the dot line: its top hangs 0.06em below the
+     dot's bottom edge (dot height 0.15em, hence +0.21em). Gurmukhi's hand-set
+     -0.17em is reproduced exactly, which is what identifies the intent. It was
+     four independent values, and today's dot-line correction closed the gap
+     under them — Devanagari's dot came to rest 0.001em off the bar and Latin's
+     overlapped it by 0.146em. */
+  --sl-tivra-top: calc(var(--sl-dot-a-top, -0.38em) + 0.21em);
   /* The mandra dot line, DERIVED. Its real constraint is not the letter — the
      notation letters have almost no descender — but the KOMAL UNDERLINE, which
      sits between letter and dot. So the dot clears the underline's bottom
@@ -158,9 +165,6 @@
      pixel and eats any sub-pixel gap; the meend zone lifts by the same
      amount so the bar keeps clearing the dot. */
   --sl-dot-a-top: -0.38em;
-  /* Tivra bar sits between the letter and the dot line: ~0.09em above the
-     ਮ headline, ~0.04em under the dot. */
-  --sl-tivra-top: -0.17em;
   --sl-baseline: 0.74em;
   /* 0.1em, matching Devanagari and Bengali — at 0.08em the line sat 0.02em
      closer to the letter than those two and read as crowding it. */
@@ -172,7 +176,6 @@
   --font-sl: 'Noto Sans Devanagari', sans-serif;
   /* नी bihari is the tallest Devanagari ink — clears it by ~1px at 17px. */
   --sl-dot-a-top: -0.381em;
-  --sl-tivra-top: -0.23em;
   --sl-baseline: 0.74em;
   --sl-underline-off: 0.1em;
   --sl-mat-dot: 34%;
@@ -180,12 +183,15 @@
 .sl-bangla {
   --font-sl-live: 'Swarlipi Metrics Bengali';
   --font-sl: 'Noto Sans Bengali', sans-serif;
-  /* Bengali ী (নী) rises ~0.14em above every other letter — a uniform line
-     clearing it would float the dots 0.4em over রে/প. Exception to the
-     one-line rule: only Ni's dot (via .sl-mat) takes the higher line. */
-  --sl-dot-a-top: -0.167em;
-  --sl-mat-dot-top: -0.384em;
-  --sl-tivra-top: -0.12em;
+  /* Bengali নী's ী reaches 0.909em against 0.692em for every other letter, so
+     the single line sits well clear of the short ones. That is the reference
+     behaviour, not a compromise: measured from OmeBhatkhandeBangla.ttf, its
+     taar dot is ONE fixed glyph position at +1.052em clearing নী's +1.016em
+     ink by 0.037em, and therefore floating ~0.32em over রে/প. Ours lands
+     0.29em over them — the dots read as a line, which is the point. An earlier
+     revision gave Ni its own raised line; that broke the line and was visible
+     as one dot sitting higher than its neighbours. */
+  --sl-dot-a-top: -0.384em;
   --sl-tivra-h: 0.2em;
   --sl-baseline: 0.75em;
   --sl-underline-off: 0.1em;
@@ -203,8 +209,13 @@
   /* Explicit stack — `inherit` would pick up an ancestor's notation font
      (e.g. a notation face on .note-value) and defeat the swarlipi render. */
   --font-sl: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
-  --sl-dot-a-top: -0.064em;
-  --sl-tivra-top: -0.06em;
+  /* Unlike the Indic scripts, Latin's TALLEST letter is also its tivra letter:
+     M is 0.724em and nothing is taller, whereas रे/ਰੇ tower over म/ਮ and so
+     leave the bar room for free. So this line is set to clear the tivra BAR
+     above M, not just M — 0.161 ink top, less 0.028 to the bar, less the
+     0.26em bar, less 0.06 to the dot, less the 0.15em dot. Setting it against
+     the letter alone (-0.064em) put the bar through the letter. */
+  --sl-dot-a-top: -0.337em;
   /* 0.26em, matching Gurmukhi and Devanagari — at 0.2em the Latin bar read as
      noticeably stubbier than theirs. */
   --sl-tivra-h: 0.26em;
@@ -412,16 +423,6 @@
    derivation live on --sl-matp-dot. */
 .sl-wrap .sl-matp {
   --sl-dx: var(--sl-matp-dot, 50%);
-}
-.sl-wrap .sl-mat > .sl-dot-a {
-  top: var(--sl-mat-dot-top, var(--sl-dot-a-top, -0.1em));
-}
-/* Bengali's Ni takes a dot line 0.14em higher than every other letter (see
-   --sl-mat-dot-top), which would put it INTO the tick's band. The bar no
-   longer moves for a tick, so this is load-bearing rather than a nicety: a
-   ticked Ni must drop back to the normal dot line or the dash lands on it. */
-.sl-wrap .sl-mat:has(.sl-mtick) > .sl-dot-a {
-  top: var(--sl-dot-a-top, -0.1em);
 }
 /* Editor live preview: kan at full size with its braces visible (see the
    kanInline render option). */
