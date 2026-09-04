@@ -1,21 +1,57 @@
 /* Metrics-only faces for the editor's transparent live input: no outlines,
    just per-character advances equal to the rendered widths, so the native
-   caret sits exactly on the rendered glyphs (see scripts/build-metrics-fonts.py). */
+   caret sits exactly on the rendered glyphs (see scripts/build-metrics-fonts.py).
+
+   TWO faces per script, because the letters are genuinely wider when bold and
+   the caret rides on these advances: Gurmukhi `s` is 608 units at weight 500
+   and 636 at 700, `n` 929 against 982. With only the 500 face declared, a
+   `.sl-bold` beat drifted the cursor further from the glyphs with every note
+   (#421). The ranges are contiguous over 100–900 so no weight falls through to
+   a synthesised face, which would widen advances unpredictably.
+   These advances are only correct while the host actually serves the Noto
+   script face. If the script's unicode range is missing from the host's font
+   config, the letters render in an OS fallback and every offset in this file is
+   calibrated against the wrong typeface — see the `subsets` note in the app's
+   nuxt.config.ts. */
 @font-face {
   font-family: 'Swarlipi Metrics Gurmukhi';
+  font-weight: 100 600;
   src: url('./metrics/SwarlipiMetrics-Gurmukhi.woff2') format('woff2');
 }
 @font-face {
+  font-family: 'Swarlipi Metrics Gurmukhi';
+  font-weight: 601 900;
+  src: url('./metrics/SwarlipiMetrics-Gurmukhi-Bold.woff2') format('woff2');
+}
+@font-face {
   font-family: 'Swarlipi Metrics Devanagari';
+  font-weight: 100 600;
   src: url('./metrics/SwarlipiMetrics-Devanagari.woff2') format('woff2');
 }
 @font-face {
+  font-family: 'Swarlipi Metrics Devanagari';
+  font-weight: 601 900;
+  src: url('./metrics/SwarlipiMetrics-Devanagari-Bold.woff2') format('woff2');
+}
+@font-face {
   font-family: 'Swarlipi Metrics Bengali';
+  font-weight: 100 600;
   src: url('./metrics/SwarlipiMetrics-Bengali.woff2') format('woff2');
 }
 @font-face {
+  font-family: 'Swarlipi Metrics Bengali';
+  font-weight: 601 900;
+  src: url('./metrics/SwarlipiMetrics-Bengali-Bold.woff2') format('woff2');
+}
+@font-face {
   font-family: 'Swarlipi Metrics Latin';
+  font-weight: 100 600;
   src: url('./metrics/SwarlipiMetrics-Latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Swarlipi Metrics Latin';
+  font-weight: 601 900;
+  src: url('./metrics/SwarlipiMetrics-Latin-Bold.woff2') format('woff2');
 }
 
 /**

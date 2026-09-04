@@ -19,7 +19,9 @@ same face. These fonts carry no outlines at all, only advances:
   - _ ( ) , space                → fixed widths
 
 Sources: Noto Sans <Script> `[wght]` slim variable fonts (OFL), instanced at
-weight 500 — the renderer's normal weight. Output: src/metrics/*.woff2,
+weights 500 and 700 — the renderer's normal and `.sl-bold` weights, since
+the caret rides on these advances. Output: src/metrics/*.woff2 (bold faces
+carry a -Bold suffix),
 referenced by src/index.css. ~1–2 KB each; committed.
 
     pip install fonttools brotli
@@ -90,7 +92,11 @@ DASH_MARGIN_EM = css_em(".sl-wrap .sl-dash", "margin-left") + css_em(
     ".sl-wrap .sl-dash", "margin-right"
 )
 UPEM = 1000
-WEIGHT = 500
+# The renderer paints at 500, and at 700 for `.sl-bold`. A face per weight is
+# not a nicety: the caret rides on these advances, and Gurmukhi `s` is 608 units
+# at 500 against 636 at 700, so a single 500 face drifted the cursor further
+# from the glyphs with every bold note (#421).
+WEIGHTS = {500: "Regular", 700: "Bold"}
 
 
 def fetch(key: str) -> Path:
@@ -105,13 +111,13 @@ def fetch(key: str) -> Path:
     return z
 
 
-def load_noto(key: str) -> TTFont:
+def load_noto(key: str, weight: int) -> TTFont:
     repo, fam, ver, _ = NOTO[key]
     with zipfile.ZipFile(fetch(key)) as zf:
         want = f"{fam}/unhinted/slim-variable-ttf/{fam}[wght].ttf"
         name = next(n for n in zf.namelist() if n.endswith(want))
         font = TTFont(io.BytesIO(zf.read(name)))
-    return instantiateVariableFont(font, {"wght": WEIGHT})
+    return instantiateVariableFont(font, {"wght": weight})
 
 
 def advance_of(font: TTFont, text: str) -> int:
@@ -127,32 +133,31 @@ def advance_of(font: TTFont, text: str) -> int:
     return int(round(total * scale))
 
 
-_FALLBACK: TTFont | None = None
+_FALLBACK: dict[int, TTFont] = {}
 
 
-def advance_fallback(text: str) -> int:
+def advance_fallback(text: str, weight: int) -> int:
     """Advance from the Latin face, for a glyph the script font lacks.
 
     Noto Sans Bengali has no en dash, for instance, so the browser renders it
     from another family in the stack. We cannot know which, but the app also
     loads Noto Sans, so its advance is the closest honest estimate.
     """
-    global _FALLBACK
-    if _FALLBACK is None:
-        _FALLBACK = load_noto("english")
-    return advance_of(_FALLBACK, text)
+    if weight not in _FALLBACK:
+        _FALLBACK[weight] = load_noto("english", weight)
+    return advance_of(_FALLBACK[weight], text)
 
 
-def advance_text(font: TTFont, text: str) -> int:
+def advance_text(font: TTFont, text: str, weight: int) -> int:
     """Advance of a passthrough character, falling back when it is missing."""
     cmap = font.getBestCmap()
     if all(ord(c) in cmap for c in text):
         return advance_of(font, text)
-    return advance_fallback(text)
+    return advance_fallback(text, weight)
 
 
-def build(key: str) -> Path:
-    src = load_noto(key)
+def build(key: str, weight: int) -> Path:
+    src = load_noto(key, weight)
     advances: dict[str, int] = {}
     for ch in map(chr, range(0x20, 0x7F)):
         low = ch.lower()
@@ -169,14 +174,14 @@ def build(key: str) -> Path:
         elif ch == "-":
             # .sl-dash adds margins around the en dash; both count toward the
             # advance the caret has to match.
-            advances[ch] = advance_text(src, TEXT["-"]) + round(
+            advances[ch] = advance_text(src, TEXT["-"], weight) + round(
                 DASH_MARGIN_EM * UPEM
             )
         elif ch in TEXT:
-            advances[ch] = advance_text(src, TEXT[ch])
+            advances[ch] = advance_text(src, TEXT[ch], weight)
         elif ch in "(), ":
             # Plain text in .sl-t: the font's own advance, no CSS width.
-            advances[ch] = advance_text(src, ch)
+            advances[ch] = advance_text(src, ch, weight)
         else:
             advances[ch] = 500  # never valid notation; stripped on input anyway
 
@@ -195,11 +200,12 @@ def build(key: str) -> Path:
     fb.setupHorizontalMetrics({n: (adv, 0) for n, adv in names.items()})
     fb.setupHorizontalHeader(ascent=src["hhea"].ascent, descent=src["hhea"].descent)
     label = NOTO[key][3]
+    style = WEIGHTS[weight]
     fb.setupNameTable(
         {
             "familyName": f"Swarlipi Metrics {label}",
-            "styleName": "Regular",
-            "psName": f"SwarlipiMetrics{label}-Regular",
+            "styleName": style,
+            "psName": f"SwarlipiMetrics{label}-{style}",
             "copyright": "Advances derived from Noto Sans (OFL); no outlines.",
         }
     )
@@ -208,7 +214,9 @@ def build(key: str) -> Path:
     fb.font.recalcTimestamp = False
     fb.font["head"].modified = fb.font["head"].created = 0
     OUT.mkdir(parents=True, exist_ok=True)
-    out = OUT / f"SwarlipiMetrics-{label}.woff2"
+    # 500 keeps the bare name; only the bold face gets a suffix.
+    suffix = "" if weight == 500 else f"-{style}"
+    out = OUT / f"SwarlipiMetrics-{label}{suffix}.woff2"
     fb.font.flavor = "woff2"
     fb.save(out)
     print(f"  {out.name}: {out.stat().st_size} bytes; s={advances['s']} r={advances['r']} n={advances['n']} u={advances['u']} {{={advances['{']}")
@@ -217,7 +225,8 @@ def build(key: str) -> Path:
 
 def main() -> int:
     for key in NOTO:
-        build(key)
+        for weight in WEIGHTS:
+            build(key, weight)
     return 0
 
 
