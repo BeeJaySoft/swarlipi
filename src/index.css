@@ -71,7 +71,14 @@
   font-weight: 500;
   /* Optical scale vs the host's base size — exposed as a unitless variable
      so host print/fit rules can multiply it back (see the app's
-     .notation-fit-inner print rule). */
+     .notation-fit-inner print rule).
+     1, i.e. no bump. This was 1.08 to compensate for a face that "reads heavy
+     and wide", but that judgement was made while the app served no Gurmukhi
+     glyph range and the notation was actually rendering in a narrower OS
+     fallback. Noto is 7.5% wider than that fallback at the same size, so the
+     bump had nothing left to correct and the notes read oversized. Kept as a
+     variable rather than removed: it is part of the package's contract and the
+     host's print fit rule multiplies it back. */
   /* The glide's stroke weight, DERIVED rather than hand-computed: the mark
      zone's height times the fraction of it MK_W_PATH's bar fills. The ratio
      mirrors MEEND_BAR_RATIO in index.ts (a test there fails if the two
@@ -103,7 +110,25 @@
   --sl-mbr-top: calc(
     var(--sl-dot-a-top, -0.24em) - var(--sl-tick-reach) - 0.06em
   );
-  --sl-scale: 1.08;
+  /* The mandra dot line, DERIVED. Its real constraint is not the letter — the
+     notation letters have almost no descender — but the KOMAL UNDERLINE, which
+     sits between letter and dot. So the dot clears the underline's bottom
+     (baseline + offset + drop) by the file's usual 0.04em, plus its own 0.15em
+     height. Gurmukhi reproduces its hand-set -0.12em exactly, which is what
+     identifies this as the original intent; the other three had drifted, most
+     of all Latin at -0.1em, whose dot sat 0.065em under the baseline against
+     Gurmukhi's 0.23em and so collided with the underline. */
+  --sl-dot-b-bot: calc(
+    1em - var(--sl-baseline, 0.74em) - var(--sl-underline-off, 0.08em) -
+      var(--sl-komal-drop, 0.09em) - 0.19em
+  );
+  /* The chhand arc's crest must clear the DEEPEST thing hanging below the
+     letter, so it is derived rather than hand-set per script: the mandra dot's
+     overhang, plus however far a komal note pushes that dot down, plus 0.04em.
+     Four hand-set values silently stopped matching the moment the komal drop
+     was added — the arc ran straight through Latin's ati-mandra dots. */
+  --sl-arc-gap: calc(-1 * var(--sl-dot-b-bot) + 0.04em);
+  --sl-scale: 1;
   font-size: calc(1em * var(--sl-scale));
   line-height: 1.9;
 }
@@ -114,10 +139,17 @@
 /* Per-script font + mark calibration. Marks are positioned in em units
    relative to each script's letter box; --sl-mat-dot is the canvas-measured
    center of the Ni consonant within the letter+bihari pair. */
-/* --sl-dot-a-top: ONE fixed dot line per script (canvas-measured to clear
-   the tallest centered ink — ਰੇ hora / रे-नी matras) so the upper dot sits
-   at the same height on every note. It is also the ONLY hand-set mark line:
-   the meend bar derives from it (see --sl-mbr-top below). */
+/* --sl-dot-a-top: ONE fixed dot line per script, set so the taar dot clears
+   that script's TALLEST letter ink by 0.075em. Measured per script with
+   canvas actualBoundingBoxAscent against the served Noto face, with a
+   bogus-family control confirming the face was really in use; the dot itself
+   measures 0.15em, so dot-a-top = (baseline − tallestInk) − 0.075 − 0.15.
+   Gurmukhi computes to -0.381 against the -0.38 that was already here, which
+   is what validates the target. The other three were set while the app served
+   no script glyph range at all and the notation rendered in an OS fallback, so
+   they were calibrated against the wrong letter heights — Latin's cap is only
+   0.724em against the Indic 0.896em, and its dot floated 0.251em clear.
+   The meend bar derives from this line (see --sl-mbr-top), so it follows. */
 .sl-punjabi {
   --font-sl-live: 'Swarlipi Metrics Gurmukhi';
   --font-sl: 'Noto Sans Gurmukhi', sans-serif;
@@ -126,25 +158,23 @@
      pixel and eats any sub-pixel gap; the meend zone lifts by the same
      amount so the bar keeps clearing the dot. */
   --sl-dot-a-top: -0.38em;
-  --sl-dot-b-bot: -0.12em;
   /* Tivra bar sits between the letter and the dot line: ~0.09em above the
      ਮ headline, ~0.04em under the dot. */
   --sl-tivra-top: -0.17em;
-  --sl-underline-off: 0.08em;
-  /* arc-gap = mandra-dot overhang (|dot-b-bot|) + 0.04em so the arc's
-     crest clears the lower dot instead of running under it. */
-  --sl-arc-gap: 0.16em;
+  --sl-baseline: 0.74em;
+  /* 0.1em, matching Devanagari and Bengali — at 0.08em the line sat 0.02em
+     closer to the letter than those two and read as crowding it. */
+  --sl-underline-off: 0.1em;
   --sl-mat-dot: 35.5%;
 }
 .sl-hindi {
   --font-sl-live: 'Swarlipi Metrics Devanagari';
   --font-sl: 'Noto Sans Devanagari', sans-serif;
   /* नी bihari is the tallest Devanagari ink — clears it by ~1px at 17px. */
-  --sl-dot-a-top: -0.44em;
-  --sl-dot-b-bot: -0.15em;
+  --sl-dot-a-top: -0.381em;
   --sl-tivra-top: -0.23em;
+  --sl-baseline: 0.74em;
   --sl-underline-off: 0.1em;
-  --sl-arc-gap: 0.19em;
   --sl-mat-dot: 34%;
 }
 .sl-bangla {
@@ -153,13 +183,12 @@
   /* Bengali ী (নী) rises ~0.14em above every other letter — a uniform line
      clearing it would float the dots 0.4em over রে/প. Exception to the
      one-line rule: only Ni's dot (via .sl-mat) takes the higher line. */
-  --sl-dot-a-top: -0.3em;
-  --sl-mat-dot-top: -0.44em;
-  --sl-dot-b-bot: -0.15em;
+  --sl-dot-a-top: -0.167em;
+  --sl-mat-dot-top: -0.384em;
   --sl-tivra-top: -0.12em;
   --sl-tivra-h: 0.2em;
+  --sl-baseline: 0.75em;
   --sl-underline-off: 0.1em;
-  --sl-arc-gap: 0.19em;
   --sl-mat-dot: 34.5%;
   /* রে only: ে is pre-base, so র sits right of centre. Derived from advances
      this repo already ships — metrics/SwarlipiMetrics-Bengali.woff2, built by
@@ -174,12 +203,21 @@
   /* Explicit stack — `inherit` would pick up an ancestor's notation font
      (e.g. a notation face on .note-value) and defeat the swarlipi render. */
   --font-sl: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
-  --sl-dot-a-top: -0.24em;
-  --sl-dot-b-bot: -0.1em;
+  --sl-dot-a-top: -0.064em;
   --sl-tivra-top: -0.06em;
-  --sl-tivra-h: 0.2em;
-  --sl-underline-off: 0.08em;
-  --sl-arc-gap: 0.14em;
+  /* 0.26em, matching Gurmukhi and Devanagari — at 0.2em the Latin bar read as
+     noticeably stubbier than theirs. */
+  --sl-tivra-h: 0.26em;
+  --sl-baseline: 0.885em;
+  --sl-underline-off: 0.1em;
+  /* Latin's baseline sits at 0.885em — far lower in the 1em box than the Indic
+     0.74em — so letter, underline and dot share only ~0.1em. No extra drop for
+     the line (it would push it further into the dot), and the dot itself moves
+     down instead so all three read as separate marks. */
+  /* 0.06em, not 0: the drop has to cover the line's own 0.1em thickness before
+     it opens any gap, so at 0 the line's top sat on the baseline. This leaves
+     0.06em between letter and line, and 0.105em between line and dot. */
+  --sl-komal-drop: 0.06em;
 }
 
 .sl-wrap .sl-n {
@@ -207,12 +245,61 @@
 .sl-wrap .sl-meend + .sl-meend {
   margin-left: 0.05em;
 }
-.sl-wrap .sl-komal {
-  text-decoration: underline;
-  /* Matches the tivra bar's weight so komal and tivra read as one system. */
-  text-decoration-thickness: 0.08em;
-  text-decoration-skip-ink: none;
-  text-underline-offset: var(--sl-underline-off, 0.08em);
+/* Komal's underline, drawn so it can be INSET. As a text-decoration it always
+   spanned the note's whole inline box — overshooting the letter's ink, and
+   leaving only the 0.05em tracking margin between two adjacent komal notes, so
+   `NN` read as one continuous rule instead of two marks.
+   It stays where text-decoration put it, and the same weight, by aligning to
+   the BASELINE rather than to the box: an empty inline-block's baseline is its
+   bottom margin edge, so the border-bottom lands on the baseline and
+   --sl-underline-off nudges it down exactly as text-underline-offset did. No
+   per-script constant, which is the point — the box-relative alternative needs
+   one per script and would drift from the letters.
+   The three lengths cancel to zero so the note's advance is unchanged (the
+   editor's caret metrics depend on it): width + margin-left + margin-right =
+   (100% - 2i) + (-100% + i) + i = 0, with the line spanning i to 100% - i. */
+.sl-wrap .sl-komal::after {
+  content: '';
+  position: absolute;
+  /* Inset on both sides — the whole point. A text-decoration always spans the
+     inline box, so it overshot the letter's ink and left only the 0.05em
+     tracking margin between two adjacent komal notes, making `NN` read as one
+     continuous rule. */
+  /* A PERCENTAGE, not a fixed em: the letters differ in width by more than
+     twice over (Devanagari र is 0.418em, Gurmukhi ਸ 0.608em, Bengali রে
+     0.971em), so a fixed inset ate half of a narrow letter while barely
+     touching a wide one — Hindi's komal Re came out as a stub. A fraction of
+     the box takes the same proportion off every letter. */
+  left: var(--sl-komal-inset, 8%);
+  right: var(--sl-komal-inset, 8%);
+  /* Placed from the BASELINE, so it lands where the text-decoration did rather
+     than drifting with the box. The note's box is exactly 1em (line-height: 1),
+     so bottom = 1em − baseline − offset − drop, which puts the line's TOP at
+     baseline + offset + drop − thickness (a border-bottom grows upward from
+     the box's bottom edge). Latin is the case that exposes this: with drop 0
+     that lands exactly ON the baseline and the line touched the letter.
+     --sl-baseline is the font's
+     baseline within that box, measured per script with a zero-size
+     inline-block probe (whose top IS the baseline): 0.74em Gurmukhi and
+     Devanagari, 0.75em Bengali, 0.885em Latin. --sl-komal-drop is the one knob
+     that lowers every script together. */
+  bottom: calc(
+    1em - var(--sl-baseline, 0.74em) - var(--sl-underline-off, 0.08em) -
+      var(--sl-komal-drop, 0.09em)
+  );
+  border-bottom: var(--sl-komal-h, 0.1em) solid currentColor;
+}
+/* Ni's underline marks the CONSONANT, not the letter+matra pair: the matra is
+   the vowel sign, and ਨ / न / ন is the note. Same rule the octave dot follows,
+   and it reuses that measurement — --sl-mat-dot is the consonant's CENTRE, so
+   the consonant spans 0 to twice it. Without this the line ran on under the
+   bihari, reading as a wider note than it is. */
+.sl-wrap .sl-mat.sl-komal::after {
+  right: calc(100% - 2 * var(--sl-mat-dot) + var(--sl-komal-inset, 8%));
+}
+/* The mirror, for a pre-base matra (Bangla রে): consonant in the right half. */
+.sl-wrap .sl-matp.sl-komal::after {
+  left: calc(2 * var(--sl-matp-dot) - 100% + var(--sl-komal-inset, 8%));
 }
 /* All marks draw with BORDER ink, never background/box-shadow — print strips
    CSS backgrounds unless the user enables "background graphics", and these
