@@ -90,6 +90,21 @@ const LETTERS = tables.letters as Record<
   SwarlipiScript,
   Record<string, string>
 >;
+/**
+ * Vowel signs that render BEFORE their consonant, so the consonant lands in
+ * the RIGHT half of the cluster (Bengali রে). Enumerated because Unicode's
+ * Indic positional category is not exposed to JS, and the category alone
+ * cannot separate them: a pre-base sign and a post-base one are both Mc.
+ */
+const PREBASE_MATRA =
+  /[\u093F\u09BF\u09C7\u09C8\u0A3F\u0ABF\u0B47\u0BC6-\u0BC8]/;
+/**
+ * Any SPACING combining mark — one that adds advance, so it takes up half of
+ * the cluster. The above-base signs on ਰੇ and रे are Mn and add nothing, which
+ * is why those two need no shift at all.
+ */
+const SPACING_MATRA = /\p{Mc}/u;
+
 const BOLS = tables.bols as Record<SwarlipiScript, Record<string, string>>;
 const DIGITS = tables.digits as Record<SwarlipiScript, string>;
 /** Characters that render as a different glyph: the two dashes. */
@@ -173,15 +188,15 @@ function noteHtml(
   const isKomal = 'RGDN'.includes(swara);
   const isTivra = swara === 'M';
   const letter = LETTERS[lang][swara.toLowerCase()] ?? escapeHtml(swara);
-  // Ni carries a trailing bihari matra (ਨੀ / नी / নী) — octave dots center
-  // on the consonant, not the full letter+matra width.
-  const hasTrailingMatra =
-    (swara === 'n' || swara === 'N') && lang !== 'english';
-  // Bangla's Re is the mirror case: ে is pre-base, so র sits in the right half
-  // and its dot shifts right (offset + derivation on --sl-matp-dot). Bangla
-  // only — ਰੇ and रे take an above-base matra of zero advance, so their
-  // consonant is already centred.
-  const hasLeadingMatra = (swara === 'r' || swara === 'R') && lang === 'bangla';
+  // Which half of the cluster the consonant occupies — the octave dot, the W
+  // tick and the komal underline all mark the CONSONANT, not the full
+  // letter+matra width. DERIVED from the letter, not named per script: the
+  // spelling in tables.json already carries the answer, and hard-coding it
+  // meant adding a script required editing the table AND a boolean in here,
+  // with nothing linking the two. Miss the second and the mark silently
+  // centres on the wrong half, which is exactly how Bangla Re was wrong.
+  const hasLeadingMatra = PREBASE_MATRA.test(letter);
+  const hasTrailingMatra = !hasLeadingMatra && SPACING_MATRA.test(letter);
 
   // Ati (double) octaves render TWO real dot elements — identical siblings
   // can never misalign, unlike a pseudo-element twin.
