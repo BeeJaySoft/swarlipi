@@ -14,15 +14,15 @@
      sl-bold class. */
   font-weight: 500;
   /* Optical scale vs the host's base size — exposed as a unitless variable
-     so host print/fit rules can multiply it back (see the app's
-     .notation-fit-inner print rule).
+     so a host's fit rule can multiply it back (see the app's
+     .notation-fit-inner rule, which fits screen and print alike).
      1, i.e. no bump. This was 1.08 to compensate for a face that "reads heavy
      and wide", but that judgement was made while the app served no Gurmukhi
      glyph range and the notation was actually rendering in a narrower OS
      fallback. Noto is 7.5% wider than that fallback at the same size, so the
      bump had nothing left to correct and the notes read oversized. Kept as a
      variable rather than removed: it is part of the package's contract and the
-     host's print fit rule multiplies it back. */
+     host's fit rule multiplies it back. */
   /* The glide's stroke weight, DERIVED rather than hand-computed: the mark
      zone's height times the fraction of it MK_W_PATH's bar fills. The ratio
      mirrors MEEND_BAR_RATIO in index.ts (a test there fails if the two
