@@ -13,6 +13,16 @@ with every notation mark drawn by CSS and inline SVG instead of a custom font.
 - A **Swarlipi font** (see Fonts, parked) will cover the one thing CSS can't:
   making copied plain text render its marks in any app.
 
+## Compatible with the Omenad keymap
+
+The input grammar is the character mapping of the **Omenad Bhatkhande fonts**
+(OmeBhatkhande Punjabi, Hindi, Bangla and English): the same letters for the
+swaras, capitals for komal and tivra, `u l U L` for the octaves, `{ }` for kan,
+`@#$%^&*` for chhand, `q w W e` / `Q E` for meend and ghaseet, `; ' [ ] \` for
+the bols. Notation typed for those fonts renders in Swarlipi unchanged —
+nothing to convert — and the four scripts correspond to the four faces. What
+changes is the output: real text instead of glyph substitution.
+
 ## Usage
 
 ```ts
@@ -96,3 +106,12 @@ Size the bridge's box to the WHOLE zone and draw the band inside it at that
 ratio. Sizing the box to the band instead lets the browser round it differently
 from the fragment bars, and the fragments come out visibly thicker at the
 junctions.
+
+## Acknowledgements
+
+Swarlipi is inspired by the [Omenad](https://github.com/omenad/fonts)
+Bhatkhande fonts. It keeps their character mapping, so notation typed for those
+fonts renders unchanged, and its chhand arc and meend hook shapes are traced
+from the OmeBhatkhande typefaces, which are released under the SIL Open Font
+License. Everything else, the letters, the marks and the layout, is Unicode
+text and CSS.

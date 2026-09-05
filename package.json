@@ -9,7 +9,9 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./style.css": "./src/index.css"
+    "./style.css": "./src/index.css",
+    "./samples": "./src/samples.ts",
+    "./reference": "./src/reference.ts"
   },
   "files": [
     "src"
@@ -27,9 +29,13 @@
   ],
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "docs:dev": "vitepress dev docs --port 5178",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --port 5178"
   },
   "devDependencies": {
+    "vitepress": "2.0.0-alpha.17",
     "vitest": "^4.0.18"
   }
 }

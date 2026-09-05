@@ -1,0 +1,129 @@
+/* Brand: the warm terracotta the notation apps use. */
+:root {
+  --vp-c-brand-1: #b4562a;
+  --vp-c-brand-2: #9e4a22;
+  --vp-c-brand-3: #873d1a;
+  --vp-c-brand-soft: rgba(180, 86, 42, 0.14);
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #b4562a 30%, #e0a458);
+  --vp-home-hero-image-background-image: linear-gradient(
+    -45deg,
+    rgba(180, 86, 42, 0.35) 40%,
+    rgba(224, 164, 88, 0.35) 60%
+  );
+  --vp-home-hero-image-filter: blur(56px);
+}
+
+.dark {
+  --vp-c-brand-1: #e0955f;
+  --vp-c-brand-2: #cf8350;
+  --vp-c-brand-3: #b4562a;
+  --vp-c-brand-soft: rgba(224, 149, 95, 0.16);
+}
+
+/* Notation demos share one visual language across the site. */
+.sw-card {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  background: var(--vp-c-bg-soft);
+}
+
+.sw-code {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.8125rem;
+  color: var(--vp-c-text-2);
+}
+
+.sw-label {
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-3);
+}
+
+.sw-note {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--vp-c-text-2);
+}
+
+/* Segmented control + inputs used by the sheet and the playground. */
+.sw-seg {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--vp-c-bg-mute);
+}
+.sw-seg button {
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: var(--vp-c-text-2);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.sw-seg button.active {
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.sw-seg button:hover:not(.active) {
+  color: var(--vp-c-text-1);
+}
+
+.sw-ctl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: var(--vp-c-text-2);
+}
+.sw-ctl input[type='range'] {
+  width: 7rem;
+  accent-color: var(--vp-c-brand-1);
+}
+.sw-ctl input[type='checkbox'] {
+  accent-color: var(--vp-c-brand-1);
+}
+
+.sw-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin: 1rem 0 1.5rem;
+}
+
+/* A notation run inside a card: room for the marks above and below. */
+.sw-run {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.2em;
+  padding: 0.35em 0.5em;
+  white-space: nowrap;
+}
+
+/* The home page's playground sits in a plain wide column. */
+.sw-home {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+}
+.sw-home h2 {
+  margin: 2.5rem 0 1rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+@media (min-width: 640px) {
+  .sw-home {
+    padding: 0 48px 96px;
+  }
+}
+@media (min-width: 960px) {
+  .sw-home {
+    padding: 0 64px 96px;
+  }
+}
