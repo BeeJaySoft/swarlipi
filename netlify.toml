@@ -1,0 +1,11 @@
+# Netlify site for the Swarlipi docs (VitePress). Site settings live in the
+# Netlify UI, like the apps: package directory `packages/swarlipi`, build
+# command `pnpm build:swarlipi-docs`, publish `packages/swarlipi/docs/.vitepress/dist`.
+[build]
+  ignore = "bash scripts/netlify-ignore.sh swarlipi-docs"
+
+# VitePress hashes everything under /assets, so it can be cached forever.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
