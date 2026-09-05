@@ -1,59 +1,3 @@
-/* Metrics-only faces for the editor's transparent live input: no outlines,
-   just per-character advances equal to the rendered widths, so the native
-   caret sits exactly on the rendered glyphs (see scripts/build-metrics-fonts.py).
-
-   TWO faces per script, because the letters are genuinely wider when bold and
-   the caret rides on these advances: Gurmukhi `s` is 608 units at weight 500
-   and 636 at 700, `n` 929 against 982. With only the 500 face declared, a
-   `.sl-bold` beat drifted the cursor further from the glyphs with every note
-   (#421). The ranges are contiguous over 100–900 so no weight falls through to
-   a synthesised face, which would widen advances unpredictably.
-   These advances are only correct while the host actually serves the Noto
-   script face. If the script's unicode range is missing from the host's font
-   config, the letters render in an OS fallback and every offset in this file is
-   calibrated against the wrong typeface — see the `subsets` note in the app's
-   nuxt.config.ts. */
-@font-face {
-  font-family: 'Swarlipi Metrics Gurmukhi';
-  font-weight: 100 600;
-  src: url('./metrics/SwarlipiMetrics-Gurmukhi.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Swarlipi Metrics Gurmukhi';
-  font-weight: 601 900;
-  src: url('./metrics/SwarlipiMetrics-Gurmukhi-Bold.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Swarlipi Metrics Devanagari';
-  font-weight: 100 600;
-  src: url('./metrics/SwarlipiMetrics-Devanagari.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Swarlipi Metrics Devanagari';
-  font-weight: 601 900;
-  src: url('./metrics/SwarlipiMetrics-Devanagari-Bold.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Swarlipi Metrics Bengali';
-  font-weight: 100 600;
-  src: url('./metrics/SwarlipiMetrics-Bengali.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Swarlipi Metrics Bengali';
-  font-weight: 601 900;
-  src: url('./metrics/SwarlipiMetrics-Bengali-Bold.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Swarlipi Metrics Latin';
-  font-weight: 100 600;
-  src: url('./metrics/SwarlipiMetrics-Latin.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Swarlipi Metrics Latin';
-  font-weight: 601 900;
-  src: url('./metrics/SwarlipiMetrics-Latin-Bold.woff2') format('woff2');
-}
-
 /**
  * Styles for the swarlipi renderer output. Framework-agnostic:
  * - apply swarlipiWrapperClass(lang) to the element receiving the HTML
@@ -158,7 +102,6 @@
    0.724em against the Indic 0.896em, and its dot floated 0.251em clear.
    The meend bar derives from this line (see --sl-mbr-top), so it follows. */
 .sl-punjabi {
-  --font-sl-live: 'Swarlipi Metrics Gurmukhi';
   --font-sl: 'Noto Sans Gurmukhi', sans-serif;
   /* Dot lines are set for >=1px clearance over the tallest ink (ਰੇ hora /
      ਨੀ bihari) AT THE READ VIEW'S 17px, where the dot's border snaps up a
@@ -172,7 +115,6 @@
   --sl-mat-dot: 35.5%;
 }
 .sl-hindi {
-  --font-sl-live: 'Swarlipi Metrics Devanagari';
   --font-sl: 'Noto Sans Devanagari', sans-serif;
   /* नी bihari is the tallest Devanagari ink — clears it by ~1px at 17px. */
   --sl-dot-a-top: -0.381em;
@@ -181,7 +123,6 @@
   --sl-mat-dot: 34%;
 }
 .sl-bangla {
-  --font-sl-live: 'Swarlipi Metrics Bengali';
   --font-sl: 'Noto Sans Bengali', sans-serif;
   /* Bengali নী's ী reaches 0.909em against 0.692em for every other letter, so
      the single line sits well clear of the short ones. That is the reference
@@ -196,16 +137,14 @@
   --sl-baseline: 0.75em;
   --sl-underline-off: 0.1em;
   --sl-mat-dot: 34.5%;
-  /* রে only: ে is pre-base, so র sits right of centre. Derived from advances
-     this repo already ships — metrics/SwarlipiMetrics-Bengali.woff2, built by
-     scripts/build-metrics-fonts.py at its pinned WEIGHT = 500, which is the
-     weight .sl-wrap paints at: রে (`r`) 971, র (`'`) 598, so ে is 373 and র's
-     centre is (373 + 598/2) / 971 = 69.2%. Re-derive from that face, never
-     from whatever the OS substitutes: a fallback Bengali face reads 66.8%. */
+  /* রে only: ে is pre-base, so র sits right of centre. Derived from Noto Sans
+     Bengali's advances at weight 500, the weight .sl-wrap paints at: রে 971,
+     র 598, so ে is 373 and র's centre is (373 + 598/2) / 971 = 69.2%.
+     Re-derive from that face, never from whatever the OS substitutes: a
+     fallback Bengali face reads 66.8%. */
   --sl-matp-dot: 69.2%;
 }
 .sl-english {
-  --font-sl-live: 'Swarlipi Metrics Latin';
   /* Explicit stack — `inherit` would pick up an ancestor's notation font
      (e.g. a notation face on .note-value) and defeat the swarlipi render. */
   --font-sl: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
@@ -266,8 +205,8 @@
    --sl-underline-off nudges it down exactly as text-underline-offset did. No
    per-script constant, which is the point — the box-relative alternative needs
    one per script and would drift from the letters.
-   The three lengths cancel to zero so the note's advance is unchanged (the
-   editor's caret metrics depend on it): width + margin-left + margin-right =
+   The three lengths cancel to zero so the note's advance is unchanged — the
+   mark never widens its letter: width + margin-left + margin-right =
    (100% - 2i) + (-100% + i) + i = 0, with the line spanning i to 100% - i. */
 .sl-wrap .sl-komal::after {
   content: '';
@@ -424,23 +363,12 @@
 .sl-wrap .sl-matp {
   --sl-dx: var(--sl-matp-dot, 50%);
 }
-/* Editor live preview: kan at full size with its braces visible (see the
-   kanInline render option). */
+/* A brace the kan parser left literal (`{m` mid-typing): dimmed, so an open
+   kan reads as in progress rather than as text. */
 .sl-wrap .sl-brace {
-  display: inline-block;
-  /* 0.52 wrapper-em = the metrics fonts' brace advance; the brace itself is
-     set at 0.8em, so its own em is 0.8 of the wrapper's. */
-  width: 0.65em;
-  text-align: center;
   opacity: 0.55;
   font-family: ui-monospace, monospace;
   font-size: 0.8em;
-}
-/* The editor's live input: same box as the wrapper, metrics face so the caret
-   advances match the rendered glyphs; the text itself is transparent. */
-.sl-wrap.sl-live {
-  font-family: var(--font-sl-live, monospace);
-  letter-spacing: 0;
 }
 .sl-wrap .sl-kan {
   font-size: 0.6em;

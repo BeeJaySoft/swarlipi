@@ -401,13 +401,6 @@ describe('renderSwarlipi — bols as chhand slots', () => {
     expect(group).toContain('ਦਿਰ');
   });
 
-  it('renders kan inline with visible braces when asked', () => {
-    const html = renderSwarlipi('{m}s', 'punjabi', { kanInline: true });
-    expect(html).not.toContain('<sup');
-    expect(html).toContain('sl-brace">{</span><span class="sl-n"');
-    expect(html).toContain('sl-brace">}</span>');
-  });
-
   it('stamps every rendered piece with its source range', () => {
     const html = renderSwarlipi('{m}su', 'punjabi');
     expect(html).toContain('<sup class="sl-kan" data-s="0" data-e="3">');
@@ -520,10 +513,10 @@ describe('half-finished entries', () => {
     }
   });
 
-  it("gives an unclosed brace the same box as a closed kan's braces", () => {
-    // `.sl-brace`'s width is the metrics fonts' brace advance, so the caret
-    // tracks the glyph while the kan is still open — and the brace does not
-    // change size the instant `}` is typed.
+  it('keeps an unclosed brace literal instead of guessing a kan', () => {
+    // A brace only becomes a kan once it closes: until then it stays a dimmed
+    // literal, so a half-typed `{m` never renders as a superscript that then
+    // jumps back down.
     for (const notes of ['{', '}', '{m', '{}']) {
       const html = renderSwarlipi(notes, 'punjabi');
       expect(html).toContain('sl-brace');
@@ -606,9 +599,8 @@ describe('octave dot columns', () => {
   const css = readFileSync(new URL('./index.css', import.meta.url), 'utf-8');
 
   it('pins the Bangla Re column to the consonant centre, not just past 50%', () => {
-    // Advances from metrics/SwarlipiMetrics-Bengali.woff2, which this repo
-    // ships and build-metrics-fonts.py builds at its pinned WEIGHT = 500 — the
-    // weight .sl-wrap paints at. A pre-base matra puts the consonant last, so
+    // Advances from Noto Sans Bengali at weight 500 — the weight .sl-wrap
+    // paints at. A pre-base matra puts the consonant last, so
     // its centre is (matra + consonant/2) / cluster. Tight tolerance on
     // purpose: the point is to reject the 66.8% that an OS fallback face
     // produces, and the 68.9% of the wrong (400) weight, both of which a

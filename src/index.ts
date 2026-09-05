@@ -80,12 +80,7 @@ export const escapeHtml = (value: string): string =>
 
 export type SwarlipiScript = 'punjabi' | 'hindi' | 'bangla' | 'english';
 
-/**
- * Letterforms, mizrab bols and numerals per script. Shared with
- * `scripts/build-metrics-fonts.py`, which bakes each cluster's advance into
- * the editor's caret-metrics faces — one source, so the caret can never
- * disagree with the glyph the renderer draws.
- */
+/** Letterforms, mizrab bols and numerals per script. */
 const LETTERS = tables.letters as Record<
   SwarlipiScript,
   Record<string, string>
@@ -348,8 +343,6 @@ function tokenToHtml(token: Token, ctx: Ctx): string {
       return noteHtml(token.swara, token.octave, ctx, token.stroke, src(token));
     case 'kan': {
       const inner = token.inner.map((t) => tokenToHtml(t, ctx)).join('');
-      if (ctx.kanInline)
-        return `<span class="sl-kan-inline"${src(token)}><span class="sl-brace">{</span>${inner}<span class="sl-brace">}</span></span>`;
       return `<sup class="sl-kan"${src(token)}>${inner}</sup>`;
     }
     case 'bol':
@@ -366,13 +359,8 @@ function tokenToHtml(token: Token, ctx: Ctx): string {
       // are real notation that prints.)
       if (OCTAVE_CHAR.test(token.ch)) return '';
       // A brace the kan parser didn't consume (`{m` mid-typing, or a
-      // malformed pair) stays literal — see the malformed-kan spec — but
-      // wears the same `.sl-brace` as a closed kan's braces instead of
-      // landing in the unstyled text bucket. Two reasons: it stops jumping
-      // from full-size body text to a dimmed 0.8em brace the instant `}` is
-      // typed, and that rule's width IS the metrics fonts' brace advance
-      // (BRACE = 520 → 0.52 wrapper-em), so the caret matches the glyph
-      // while the kan is still open.
+      // malformed pair) stays literal — see the malformed-kan spec — dimmed
+      // as `.sl-brace` so an open kan reads as in progress, not as text.
       if (token.ch === '{' || token.ch === '}')
         return `<span class="sl-brace"${src(token)}>${token.ch}</span>`;
       const text = isDigit(token.ch)
@@ -650,13 +638,6 @@ export interface SwarlipiRenderOptions {
    */
   noteClass?: (swara: string, octave?: string) => string | undefined;
   /**
-   * Draw kan inline as `{…}` at full size instead of a superscript. For an
-   * editor's live preview over a transparent input: the braces are real
-   * characters in the source, so showing them keeps the rendered widths close
-   * to the raw text's and the caret where the user expects it.
-   */
-  kanInline?: boolean;
-  /**
    * Editor mode: a chhand symbol with no notes under it yet draws its full
    * mark over empty slots, so a half-typed `@` is visible and sized like the
    * real thing. Read views leave it out — a stray marker in a published
@@ -669,7 +650,6 @@ export interface SwarlipiRenderOptions {
 interface Ctx {
   lang: SwarlipiScript;
   noteClass?: SwarlipiRenderOptions['noteClass'];
-  kanInline?: boolean;
   editing?: boolean;
 }
 
@@ -686,7 +666,6 @@ export function renderSwarlipi(
   return assemble(tokens, 0, tokens.length, {
     lang: safeLang,
     noteClass: options.noteClass,
-    kanInline: options.kanInline,
     editing: options.editing,
   }).html;
 }

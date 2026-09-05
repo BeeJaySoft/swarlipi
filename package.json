@@ -9,8 +9,7 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./style.css": "./src/index.css",
-    "./metrics/*": "./src/metrics/*"
+    "./style.css": "./src/index.css"
   },
   "files": [
     "src"
