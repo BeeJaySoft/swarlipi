@@ -15,7 +15,8 @@
     "./reference": "./src/reference.ts"
   },
   "files": [
-    "src"
+    "src",
+    "fonts"
   ],
   "keywords": [
     "bhatkhande",
@@ -34,7 +35,8 @@
     "docs:dev": "vitepress dev docs --port 5178",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs --port 5178",
-    "build:fonts": "python3 scripts/build-fonts.py"
+    "build:fonts": "python3 scripts/build-fonts.py",
+    "prepack": "python3 scripts/build-fonts.py"
   },
   "devDependencies": {
     "vitepress": "2.0.0-alpha.17",

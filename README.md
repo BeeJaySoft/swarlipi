@@ -85,12 +85,13 @@ cannot stretch chhand arcs or meend bars across letters, so the renderer keeps
 that role; the font is for "everything else": Word, Pages, PDFs, anywhere the
 copied text lands and the font is installed.
 
-`scripts/build-fonts.py` builds them from pinned Noto releases (fontTools;
-`pnpm --filter swarlipi build:fonts` → `fonts/`, git-ignored, as is the
-`.noto-cache/` of Noto zips). The manual-only workflow
-`.github/workflows/swarlipi-fonts.yml` does the same on CI and uploads a zip.
-Binaries are never committed; when the fonts ship they go out as a release
-asset and inside the npm tarball (`fonts` added to `files`).
+`scripts/build-fonts.py` builds them from pinned Noto releases (Python 3.10+
+with `fontTools`; `pnpm --filter swarlipi build:fonts` → `fonts/`, git-ignored,
+as is the `.noto-cache/` of Noto zips). Binaries never enter git: the package's
+`prepack` script runs the build, so `pnpm pack` and `npm publish` ship `fonts/`
+inside the tarball, and every published version carries fonts built from its
+own calibration. Noto stays pinned on purpose; bumping a pin is a deliberate
+commit, since new outlines can move under the anchors.
 
 Shipping is parked until the package publishes or copy-as-text goes beyond
 admins. Known state when parked: verified in HarfBuzz, CoreText and Chromium;

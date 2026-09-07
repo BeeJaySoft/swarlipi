@@ -34,8 +34,9 @@ Per script:
      these on the web, so no WOFF2).
 
 Reproducible: pinned Noto release zips are fetched into a cache dir. Fonts are
-NOT committed — `fonts/` and `.noto-cache/` are git-ignored; CI builds them
-into a release asset / the npm tarball.
+NOT committed — `fonts/` and `.noto-cache/` are git-ignored. The package's
+`prepack` script runs this build, so `pnpm pack` / `npm publish` ship `fonts/`
+inside the tarball without a binary ever entering git.
 
     pnpm --filter swarlipi build:fonts              # → packages/swarlipi/fonts
     python3 scripts/build-fonts.py --out /tmp/x     # elsewhere
