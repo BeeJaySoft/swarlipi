@@ -10,8 +10,19 @@ with every notation mark drawn by CSS and inline SVG instead of a custom font.
 - Zero runtime dependencies.
 - Sizing is pure `em`, colours use `currentColor`, marks are border/SVG ink so
   they print without "background graphics".
-- A **Swarlipi font** (see Fonts, parked) will cover the one thing CSS can't:
-  making copied plain text render its marks in any app.
+- The **Swarlipi fonts** (see Fonts) cover the one thing CSS can't: making
+  copied plain text render its marks in any app that has the font.
+
+## Install
+
+```sh
+npm install swarlipi
+```
+
+ESM only, TypeScript types included, no runtime dependencies. Entry points:
+`swarlipi` (renderer), `swarlipi/style.css`, `swarlipi/bridge` (cross-beat
+glides, browser only), `swarlipi/samples`, `swarlipi/reference`, and the
+`fonts/` directory. Code is MIT; the fonts are OFL (`fonts/LICENSE`).
 
 ## Compatible with the Omenad keymap
 
@@ -75,29 +86,105 @@ cluster (never between a consonant and its vowel sign, which splits the
 syllable in CoreText/Word). Whether they show depends on the destination
 font — install a Swarlipi font for guaranteed rendering.
 
-## Fonts (built, not shipped)
+## Fonts
 
 The plain-text export only shows its marks where the destination font can
-shape them. The fix is a **Swarlipi font** per script: Noto Sans `<Script>`
-plus the six combining marks with GPOS anchors, one variable font per script
-(weight 400–700), renamed because "Noto" is an OFL Reserved Font Name. A font
-cannot stretch chhand arcs or meend bars across letters, so the renderer keeps
-that role; the font is for "everything else": Word, Pages, PDFs, anywhere the
-copied text lands and the font is installed.
+shape them. The **Swarlipi fonts** fix that: Noto Sans `<Script>` plus the six
+combining marks with GPOS anchors, one variable font per script (weight
+400–700), renamed because "Noto" is an OFL Reserved Font Name. A font cannot
+stretch chhand arcs or meend bars across letters, so the renderer keeps that
+role; the font is for "everything else": Word, Pages, PDFs, anywhere the copied
+text lands and the font is installed.
 
-`scripts/build-fonts.py` builds them from pinned Noto releases (Python 3.10+
-with `fontTools`; `pnpm --filter swarlipi build:fonts` → `fonts/`, git-ignored,
-as is the `.noto-cache/` of Noto zips). Binaries never enter git: the package's
-`prepack` script runs the build, so `pnpm pack` and `npm publish` ship `fonts/`
-inside the tarball, and every published version carries fonts built from its
-own calibration. Noto stays pinned on purpose; bumping a pin is a deliberate
-commit, since new outlines can move under the anchors.
+The package ships them under `fonts/`: `SwarlipiGurmukhi-Variable`,
+`SwarlipiDevanagari-Variable` and `SwarlipiBengali-Variable` as `.ttf` (the
+install format) and `.woff2` (for the web), plus `swarlipi-fonts.css` with the
+`@font-face` rules and the OFL `LICENSE`. Any npm CDN serves them:
 
-Shipping is parked until the package publishes or copy-as-text goes beyond
-admins. Known state when parked: verified in HarfBuzz, CoreText and Chromium;
-the Chromium check of the `calt` komal-underline variants was not re-run after
-the mark-bearing fix; anchor x is static (ink centre at Regular), so a bold
-dot can sit a few units off-centre; Windows Word and LibreOffice untested.
+```html
+<!-- one link; families "Swarlipi Gurmukhi" / "Swarlipi Devanagari" / "Swarlipi Bengali" -->
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/swarlipi@0.1/fonts/swarlipi-fonts.css"
+/>
+```
+
+Desktop install: download the `.ttf` from the same directory, for example
+`https://cdn.jsdelivr.net/npm/swarlipi@0.1/fonts/SwarlipiGurmukhi-Variable.ttf`,
+and double-click it. `@0.1` follows patch releases; pin an exact version
+(`swarlipi@0.1.0`) if you would rather nothing moved.
+
+No Latin font is built: **Noto Sans** already carries all six marks with
+anchors (it is where the script fonts borrow theirs), so copied `english`
+notation set in Noto Sans is correct. Note that San Francisco and Times lack
+the tivra mark (U+030D), so tivra in a system font falls back to another face.
+
+Two formats, two jobs: `.woff2` for `@font-face` (a third of the bytes, and
+every browser since 2016 takes it), `.ttf` to install (nothing installs a
+WOFF2, and it is also the `@font-face` fallback for anything without WOFF2).
+Legacy WOFF 1.0 is not built: only IE11 needed it, and the TTF covers that.
+
+### Building them
+
+`scripts/build-fonts.py` builds the fonts from pinned Noto releases (Python
+3.10+, `pip install "fonttools[woff]"`). `pnpm --filter swarlipi build:fonts`
+writes `fonts/`.
+
+No binary is committed: `fonts/` is git-ignored, as is the `.noto-cache/` of
+Noto source zips the build fetches. The package's `prepack` runs the build, so
+`pnpm pack` and `pnpm publish` ship `fonts/` inside the tarball and every
+published version carries fonts built from its own script. A publish therefore
+needs Python and fontTools on the machine doing it; a missing one fails the
+publish rather than shipping a package without fonts.
+
+The build is byte-reproducible (timestamps are pinned), and the script with
+its pinned Noto releases is the fonts' **only** input — nothing in the
+renderer, the stylesheet or the app affects them. Noto stays pinned on
+purpose; bumping a pin is a deliberate commit, since new outlines can move
+under the anchors.
+
+Verified in HarfBuzz, Chromium (400/500/700, komal width variants included)
+and CoreText. Known limits: anchor x is static (ink centre at Regular), so a
+bold dot can sit a few units off-centre; Windows Word and LibreOffice are
+untested.
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md).
+
+## Releasing
+
+Manual, and deliberately so: the repo's pre-commit hook bumps only
+`apps/app`, never this package. A library's version is a semver judgement
+(patch / minor / major), not something a commit should decide.
+
+From a clean `main` checkout, with Python and fontTools available (`prepack`
+builds `dist/` and `fonts/`):
+
+```sh
+cd packages/swarlipi
+pnpm version patch --no-git-tag-version   # or minor / major
+pnpm publish --access public
+```
+
+Never publish with `--ignore-scripts`: `prepack` is what builds `dist/` and
+`fonts/`, and both are git-ignored, so skipping it publishes a package with no
+code and no fonts — and npm will not let a version be replaced. `prepack`
+asserts the built files exist for that reason.
+
+**pnpm, not npm.** The published manifest points `main` / `types` / `exports`
+at `dist/` through `publishConfig`, and those field overrides are a pnpm
+feature — npm ignores them and would publish a manifest whose entry point is
+`src/index.ts`. A `prepublishOnly` guard refuses an `npm publish` for that
+reason.
+
+`--no-git-tag-version` matters in a monorepo: a bare `v0.1.1` tag would not say
+which package it belongs to. Commit the bump, and tag it `swarlipi-v0.1.1` if
+you want a tag.
+
+Forgetting the bump is safe — npm refuses to publish over an existing version,
+so the publish fails loudly rather than shipping the wrong thing. Inspect the
+tarball first with `pnpm pack` any time.
 
 ## Cross-beat meend
 

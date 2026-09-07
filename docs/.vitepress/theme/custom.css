@@ -104,6 +104,13 @@
   padding: 0.35em 0.5em;
   white-space: nowrap;
 }
+/* Room for the marks that sit above the letters, on the element that actually
+   carries the sample's font-size — `.sw-run`'s own `em` is the card's text
+   size, so padding there stays put while the run scales with the size slider. */
+.sw-run .sw-swara,
+.sw-stage .sw-swara {
+  padding-top: 0.5em;
+}
 
 /* The home page's playground sits in a plain wide column. */
 .sw-home {
@@ -126,4 +133,44 @@
   .sw-home {
     padding: 0 64px 96px;
   }
+}
+
+/* Font download buttons (guide/fonts.md) */
+.sw-fonts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
+.vp-doc .sw-font-dl,
+.sw-font-dl {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 18px;
+  min-width: 130px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 10px;
+  background: var(--vp-c-bg-soft);
+  text-decoration: none;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+}
+.vp-doc .sw-font-dl,
+.vp-doc .sw-font-dl strong,
+.vp-doc .sw-font-dl span {
+  text-decoration: none;
+}
+.sw-font-dl:hover {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-bg-elv);
+}
+.sw-font-dl strong {
+  color: var(--vp-c-text-1);
+  font-weight: 600;
+}
+.sw-font-dl span {
+  color: var(--vp-c-text-3);
+  font-size: 13px;
 }

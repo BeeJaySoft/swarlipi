@@ -1,9 +1,5 @@
 # Getting started
 
-::: info Pre-release
-Swarlipi is not on npm yet. This site documents the package as it will ship.
-:::
-
 ## Install
 
 ```sh
@@ -93,16 +89,18 @@ renderSwarlipi('@', 'hindi', { editing: true });
 
 For a clipboard or a text field, `toUnicodeNotation` gives the letters with
 real combining diacritics: dots above and below for the octaves, a low line
-for komal, a vertical line above for tivra. Kan becomes parentheses; chhand
-and meend have no plain-text form and are left out.
+for komal, a vertical line above for tivra.
 
 ```ts
 import { toUnicodeNotation } from 'swarlipi';
 toUnicodeNotation('Rl', 'hindi'); // "रे̱̣"
 ```
 
-Whether the marks show depends on the destination font. A Swarlipi font that
-shapes them everywhere is planned.
+It is a one-way export for reading. Chhand, meend and ghaseet markers have no
+plain-text form and are dropped, so the notation cannot be rebuilt from the
+text — see [what is lost](/api#what-is-lost) for the full list. Whether the
+marks are drawn depends on the destination font; the
+[Swarlipi fonts](/guide/fonts) ship with the package for that reason.
 
 ## Next
 

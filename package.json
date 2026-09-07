@@ -1,9 +1,17 @@
 {
   "name": "swarlipi",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.1.0",
+  "private": false,
   "description": "Fontless Bhatkhande notation renderer — real Unicode letters plus CSS/SVG marks, in four scripts.",
-  "license": "MIT",
+  "license": "MIT AND OFL-1.1",
+  "author": "BeeJaySoft",
+  "homepage": "https://swarlipi.beejaysoft.com",
+  "bugs": {
+    "url": "https://swarlipi.beejaysoft.com"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",
@@ -14,9 +22,37 @@
     "./samples": "./src/samples.ts",
     "./reference": "./src/reference.ts"
   },
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./bridge": {
+        "types": "./dist/bridge.d.ts",
+        "default": "./dist/bridge.js"
+      },
+      "./samples": {
+        "types": "./dist/samples.d.ts",
+        "default": "./dist/samples.js"
+      },
+      "./reference": {
+        "types": "./dist/reference.d.ts",
+        "default": "./dist/reference.js"
+      },
+      "./style.css": "./src/index.css",
+      "./fonts/*": "./fonts/*",
+      "./package.json": "./package.json"
+    }
+  },
   "files": [
-    "src",
-    "fonts"
+    "dist",
+    "src/index.css",
+    "fonts",
+    "CHANGELOG.md"
   ],
   "keywords": [
     "bhatkhande",
@@ -24,19 +60,25 @@
     "indian-classical-music",
     "sargam",
     "gurmukhi",
-    "devanagari"
+    "devanagari",
+    "swarlipi",
+    "hindustani",
+    "meend",
+    "font"
   ],
   "sideEffects": [
     "*.css"
   ],
   "scripts": {
+    "build:dist": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
+    "build:fonts": "python3 scripts/build-fonts.py",
+    "prepublishOnly": "node -e \"const ua=process.env.npm_config_user_agent||'';if(!ua.includes('pnpm')){console.error('\\\\n  Publish with pnpm, not npm.\\\\n  npm ignores publishConfig field overrides, so it would ship a manifest whose main/types/exports point at src/*.ts.\\\\n  Run: pnpm publish --access public\\\\n');process.exit(1)}\"",
+    "prepack": "pnpm run build:dist && pnpm run build:fonts && node -e \"const fs=require('fs');const need=['dist/index.js','dist/index.d.ts','dist/bridge.js','src/index.css','fonts/swarlipi-fonts.css','fonts/SwarlipiGurmukhi-Variable.ttf','fonts/SwarlipiGurmukhi-Variable.woff2'];const missing=need.filter(f=>!fs.existsSync(f));if(missing.length){console.error('\\\\n  Refusing to pack: built output missing\\\\n   '+missing.join('\\\\n   ')+'\\\\n');process.exit(1)}\" && node --input-type=module -e \"import('./dist/index.js').then(m=>{if(typeof m.renderSwarlipi!=='function')throw new Error('dist/index.js exports no renderSwarlipi');return import('./dist/bridge.js')}).then(m=>{if(typeof m.planBridges!=='function')throw new Error('dist/bridge.js exports no planBridges')}).catch(e=>{console.error('\\\\n  Refusing to pack: dist does not load under Node ESM\\\\n   '+e.message+'\\\\n');process.exit(1)})\"",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "docs:dev": "vitepress dev docs --port 5178",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs --port 5178",
-    "build:fonts": "python3 scripts/build-fonts.py",
-    "prepack": "python3 scripts/build-fonts.py"
+    "docs:preview": "vitepress preview docs --port 5178"
   },
   "devDependencies": {
     "vitepress": "2.0.0-alpha.17",

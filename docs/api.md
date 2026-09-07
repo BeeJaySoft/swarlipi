@@ -36,11 +36,43 @@ The class list the receiving element must carry: `"sl-wrap sl-<script>"`.
 
 ## `toUnicodeNotation(notes, script)`
 
-The plain-text form: letters in the script plus Unicode combining marks for
-the octave dots, the komal line and the tivra bar. Kan becomes parentheses;
-chhand and meend markers are left out; bols and digits use their script forms.
-Marks are placed after the whole letter cluster, never between a consonant
-and its vowel sign.
+The plain-text form: letters in the script plus Unicode combining marks.
+Marks are placed after the whole letter cluster, never between a consonant and
+its vowel sign, which would split the syllable in CoreText and Word.
+
+```ts
+toUnicodeNotation('Rl', 'hindi'); // "रे̱̣"  komal Re, mandra
+```
+
+### What survives
+
+| Input                  | Becomes                                      |
+| ---------------------- | -------------------------------------------- |
+| letters                | the script's letters, with their vowel signs |
+| komal `R G D N`        | U+0331 combining macron below                |
+| tivra `M`              | U+030D combining vertical line above         |
+| octaves `u U l L`      | U+0307, U+0308, U+0323, U+0324               |
+| kan `{p}`, murki `(r)` | parentheses around the notes                 |
+| bols `; ' [ ] \`       | their letters (`;` → ਦ / द / দ)              |
+| digits `1 2 3`         | the script's digits                          |
+| `-` and `_`            | en dash and em dash                          |
+
+### What is lost
+
+This is a **one-way export for reading, not a storage format.** Notation
+cannot be recovered from the text it produces.
+
+- **Chhand markers are dropped.** `@sr` and `sr` give the same text, so the
+  subdivision is gone.
+- **Meend and ghaseet markers are dropped.** `qsre`, `QsrE` and `sre` all give
+  the same text. Nothing in Unicode draws a glide across letters.
+- **A continuation-only beat becomes an empty string.** `w` and `W` carry no
+  letter, so a beat holding just a continuation exports as nothing. Join beats
+  with a separator of your own if an empty beat would be ambiguous.
+- **Kan and murki are indistinguishable**, since both become parentheses.
+- **Whether the marks are drawn depends on the destination font.** The
+  [Swarlipi fonts](/guide/fonts) exist for exactly this; in a font without the
+  marks the letters still read and the marks are dropped or misplaced.
 
 ## `MEEND_BAR_RATIO`
 
@@ -75,6 +107,24 @@ pass. That is what makes the bridges print: the print engine re-lays-out at
 paper width with print-media font sizes, which no screen measurement can
 predict. `slabRatio` is the band's height as a fraction of the box, scale-free
 for the same reason.
+
+### `planBridges({ containerRect, zonesAt, spans })`
+
+The geometry with no DOM: rectangles in, `BridgeBar[]` out.
+`measureBridges` is a thin shim over it that reads the page and writes the
+anchor names. Use it directly if you already hold the layout — a virtualised
+grid, a worker, a test.
+
+`zonesAt(beatIndex)` returns that beat's fragments in document order, each as
+`{ name, rect, cellRect, slabRatio }`: the anchor name you assigned, the
+fragment's own box, its beat cell's box (x is decomposed against the centre)
+and the ink fraction. Return `undefined` (or `[]`) for a beat that is not
+rendered — a span running past the rendered window still bridges the fragments
+that are present, which is what a trimmed view needs.
+
+It returns no bars when `containerRect.width` is 0, since an unlaid-out
+container reports every rectangle as 0 and there is nothing to measure against;
+call it again once the container has a size.
 
 ### `bridgeElement(bar, doc?)`
 

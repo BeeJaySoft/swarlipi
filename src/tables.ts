@@ -1,0 +1,84 @@
+// The letter, bol and digit tables per script. A module rather than JSON so
+// the built package imports it the same way in bundlers and in Node.
+const tables = {
+  letters: {
+    punjabi: {
+      s: 'ਸ',
+      r: 'ਰੇ',
+      g: 'ਗ',
+      m: 'ਮ',
+      p: 'ਪ',
+      d: 'ਧ',
+      n: 'ਨੀ',
+    },
+    hindi: {
+      s: 'स',
+      r: 'रे',
+      g: 'ग',
+      m: 'म',
+      p: 'प',
+      d: 'ध',
+      n: 'नी',
+    },
+    bangla: {
+      s: 'স',
+      r: 'রে',
+      g: 'গ',
+      m: 'ম',
+      p: 'প',
+      d: 'ধ',
+      n: 'নী',
+    },
+    english: {
+      s: 'S',
+      r: 'R',
+      g: 'G',
+      m: 'M',
+      p: 'P',
+      d: 'D',
+      n: 'N',
+    },
+  },
+  bols: {
+    punjabi: {
+      ';': 'ਦ',
+      "'": 'ਰ',
+      '[': 'ਦਾ',
+      ']': 'ਰਾ',
+      '\\': 'ਦਿਰ',
+    },
+    hindi: {
+      ';': 'द',
+      "'": 'र',
+      '[': 'दा',
+      ']': 'रा',
+      '\\': 'दिर',
+    },
+    bangla: {
+      ';': 'দ',
+      "'": 'র',
+      '[': 'দা',
+      ']': 'রা',
+      '\\': 'দির',
+    },
+    english: {
+      ';': 'da',
+      "'": 'ra',
+      '[': 'daa',
+      ']': 'raa',
+      '\\': 'dir',
+    },
+  },
+  digits: {
+    punjabi: '੦੧੨੩੪੫੬੭੮੯',
+    hindi: '०१२३४५६७८९',
+    bangla: '০১২৩৪৫৬৭৮৯',
+    english: '0123456789',
+  },
+  text: {
+    '-': '–',
+    _: '—',
+  },
+};
+
+export default tables;

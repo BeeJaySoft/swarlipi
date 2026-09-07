@@ -41,18 +41,39 @@ const group = computed(() =>
 .sw-sheet {
   margin: 1rem 0 1.5rem;
 }
+/* Wrapping flex, not a fixed grid: a sample is one beat OR a whole row
+   ("s r g m p d n"), so a card has to be allowed to size to its run. In a
+   `minmax(140px, 1fr)` grid every card was capped at the column width and the
+   wide rows were centre-cropped — sa lost off the left, Ni off the right. The
+   140px floor keeps the single-symbol groups looking like a grid anyway. */
 .sw-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.6rem;
+  /* A single card can still be wider than a phone at the top of the size
+     slider. Scroll the ROW, never the card or the run: the marks live inside
+     a card, so the row's box contains them and this clips nothing — whereas a
+     scroll box on the card cuts the meend hooks that overhang the line. */
+  overflow-x: auto;
 }
 .sw-sample {
   display: flex;
+  /* 0 0 auto, and no max-width: a card must never be squeezed below its run.
+     With `0 1 auto` + `max-width: 100%` a wide row was capped at the viewport
+     and `.sw-run` centres it, so it spilled over BOTH edges — and the
+     inline-start half is not reachable by scrolling, which lost `sa` off the
+     left all over again. Un-shrinkable, the row scrolls instead (above). */
+  flex: 0 0 auto;
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
   padding: 0.5rem 0.5rem 0.6rem;
-  min-width: 0;
-  overflow: hidden;
+  min-width: 140px;
 }
+/* No `overflow` on the card or the run, deliberately. A meend hook, a ghaseet
+   bracket and the taar dots are absolutely positioned ABOVE the line box, and
+   any scroll container clips both axes — CSS drags `overflow-y` from visible
+   to auto as soon as `overflow-x` is auto — which sliced the tops off every
+   meend and ghaseet. Cards size to their run instead (flex, above), so at
+   ordinary sizes nothing overflows at all. */
 </style>

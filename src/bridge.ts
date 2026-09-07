@@ -26,7 +26,7 @@
  * re-render of a beat drops them; re-measure whenever zone elements are added.
  */
 
-import { MEEND_BAR_RATIO } from './meend-metrics';
+import { MEEND_BAR_RATIO } from './meend-metrics.js';
 
 /** A glide from the beat at flat index `from` to the beat at `to`. */
 export interface BridgeSpan {
@@ -54,6 +54,35 @@ export interface BridgeBar {
   endAnchor: string | null;
   /** Ink height as a fraction of the box, drawn by the bar's own svg rect. */
   slabRatio: number;
+}
+
+/** The part of a `DOMRect` the geometry uses. */
+export interface BridgeRect {
+  top: number;
+  left: number;
+  right: number;
+  width: number;
+  height: number;
+}
+
+/** One fragment element, reduced to what the geometry needs. */
+export interface BridgeZone {
+  /** The zone's CSS anchor-name, already assigned to the element. */
+  name: string;
+  /** The zone's own box. */
+  rect: BridgeRect;
+  /** The box of the beat cell holding it; x is decomposed against its centre. */
+  cellRect: BridgeRect;
+  /** Ink height as a fraction of the zone's box. */
+  slabRatio: number;
+}
+
+export interface PlanBridgesInput {
+  /** The box the bars are positioned in. */
+  containerRect: BridgeRect;
+  /** The fragments in a beat, in document order, or none. */
+  zonesAt: (beatIndex: number) => ReadonlyArray<BridgeZone> | undefined;
+  spans: ReadonlyArray<BridgeSpan>;
 }
 
 export interface MeasureBridgesOptions {
@@ -99,44 +128,35 @@ function slabRatioOf(zone: HTMLElement): number {
   return box > 0 ? bar / box : MEEND_BAR_RATIO;
 }
 
-interface Zone {
-  el: HTMLElement;
-  cell: Element;
-  /** This zone's CSS anchor-name (assigned inline on the element). */
-  name: string;
-}
-
 interface XAnchor {
   pct: number;
   px: number;
 }
 
-export function measureBridges({
-  container,
-  cellAt,
+/**
+ * The geometry, with no DOM: rectangles in, bars out. Split from
+ * `measureBridges` so the parts that decide the picture — which fragments a
+ * span chains, whether two of them are on the same row, how far a bar runs
+ * into its zones — are testable without a layout engine. A DOM shim is no
+ * help here: jsdom and happy-dom return a zero rect for everything, so an
+ * assertion against them would prove nothing.
+ */
+export function planBridges({
+  containerRect,
+  zonesAt,
   spans,
-  anchorPrefix,
-}: MeasureBridgesOptions): BridgeBar[] {
+}: PlanBridgesInput): BridgeBar[] {
   const bars: BridgeBar[] = [];
-  const containerRect = container.getBoundingClientRect();
-
-  const zonesOf = (beatIndex: number): Zone[] => {
-    const cell = cellAt(beatIndex);
-    if (!cell) return [];
-    return [...cell.querySelectorAll<HTMLElement>(BRIDGE_ZONE_SELECTOR)].map(
-      (el, zi) => {
-        const name = `${anchorPrefix}-${beatIndex}-${zi}`;
-        el.style.setProperty('anchor-name', name);
-        return { el, cell, name };
-      }
-    );
-  };
+  // An unlaid-out container — display:none, a tab not yet shown, a measure
+  // before first layout — reports every rect as 0. Dividing by that width
+  // gives NaN percentages, and `0 < 0` is false so every pair would take the
+  // row-wrap branch and emit two bars. Measure again once it has a size.
+  if (!(containerRect.width > 0)) return bars;
 
   // Decompose an x coordinate against the zone's beat cell: center as a
   // container-width percentage + a font-fixed px remainder.
-  const anchorOf = (zone: Zone, x: number): XAnchor => {
-    const cellRect = zone.cell.getBoundingClientRect();
-    const center = cellRect.left + cellRect.width / 2;
+  const anchorOf = (zone: BridgeZone, x: number): XAnchor => {
+    const center = zone.cellRect.left + zone.cellRect.width / 2;
     return {
       pct: ((center - containerRect.left) / containerRect.width) * 100,
       px: x - center,
@@ -153,11 +173,11 @@ export function measureBridges({
     from: XAnchor,
     to: XAnchor,
     top: number,
-    topZone: Zone,
-    startZone: Zone | null,
-    endZone: Zone | null
+    topZone: BridgeZone,
+    startZone: BridgeZone | null,
+    endZone: BridgeZone | null
   ) => {
-    const zoneH = topZone.el.getBoundingClientRect().height;
+    const zoneH = topZone.rect.height;
     const overlap = zoneH * BRIDGE_OVERLAP;
     const fromPx = from.px - (startZone ? overlap : 0);
     const toPx = to.px + (endZone ? overlap : 0);
@@ -171,9 +191,12 @@ export function measureBridges({
       topAnchor: topZone.name,
       startAnchor: startZone?.name ?? null,
       endAnchor: endZone?.name ?? null,
-      slabRatio: slabRatioOf(topZone.el),
+      slabRatio: topZone.slabRatio,
     });
   };
+
+  const zonesOf = (beatIndex: number): ReadonlyArray<BridgeZone> =>
+    zonesAt(beatIndex) ?? [];
 
   for (const span of spans) {
     if (span.to <= span.from) continue; // in-beat pairs draw themselves
@@ -182,7 +205,7 @@ export function measureBridges({
     // beat), every intermediate beat's zones in order, the closer beat's
     // FIRST zone (its closer piece leads the beat). Bridging consecutive
     // pairs handles any number of row wraps.
-    const chain: Zone[] = [];
+    const chain: BridgeZone[] = [];
     const fromZones = zonesOf(span.from);
     if (fromZones.length) chain.push(fromZones[fromZones.length - 1]!);
     for (let m = span.from + 1; m < span.to; m++) chain.push(...zonesOf(m));
@@ -193,8 +216,8 @@ export function measureBridges({
     for (let k = 0; k < chain.length - 1; k++) {
       const za = chain[k]!;
       const zb = chain[k + 1]!;
-      const a = za.el.getBoundingClientRect();
-      const b = zb.el.getBoundingClientRect();
+      const a = za.rect;
+      const b = zb.rect;
       const start = anchorOf(za, a.right);
       const end = anchorOf(zb, b.left);
       // Row test against the line advance, not the mark height: anything
@@ -223,6 +246,42 @@ export function measureBridges({
     }
   }
   return bars;
+}
+
+/**
+ * Read the page, then hand the geometry to `planBridges`. The only part that
+ * touches the DOM: it finds each beat's fragments, writes the `anchor-name`
+ * the stylesheet's rules resolve against, and measures. Keep it thin — the
+ * decisions live in `planBridges`, which is tested.
+ */
+export function measureBridges({
+  container,
+  cellAt,
+  spans,
+  anchorPrefix,
+}: MeasureBridgesOptions): BridgeBar[] {
+  const zonesAt = (beatIndex: number): BridgeZone[] => {
+    const cell = cellAt(beatIndex);
+    if (!cell) return [];
+    const cellRect = cell.getBoundingClientRect();
+    return [...cell.querySelectorAll<HTMLElement>(BRIDGE_ZONE_SELECTOR)].map(
+      (el, zi) => {
+        const name = `${anchorPrefix}-${beatIndex}-${zi}`;
+        el.style.setProperty('anchor-name', name);
+        return {
+          name,
+          rect: el.getBoundingClientRect(),
+          cellRect,
+          slabRatio: slabRatioOf(el),
+        };
+      }
+    );
+  };
+  return planBridges({
+    containerRect: container.getBoundingClientRect(),
+    zonesAt,
+    spans,
+  });
 }
 
 /** Class list for a bar element, beside the `data-sl-bar` attribute:

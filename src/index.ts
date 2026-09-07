@@ -33,8 +33,12 @@
  * can come from an unvalidated cookie during SSR.
  */
 
-import tables from './tables.json';
-import { MEEND_BAR_RATIO, MK_BAR_UNITS, MK_FRAME_UNITS } from './meend-metrics';
+import tables from './tables.js';
+import {
+  MEEND_BAR_RATIO,
+  MK_BAR_UNITS,
+  MK_FRAME_UNITS,
+} from './meend-metrics.js';
 
 export { MEEND_BAR_RATIO };
 
@@ -189,7 +193,7 @@ function noteHtml(
   // Which half of the cluster the consonant occupies — the octave dot, the W
   // tick and the komal underline all mark the CONSONANT, not the full
   // letter+matra width. DERIVED from the letter, not named per script: the
-  // spelling in tables.json already carries the answer, and hard-coding it
+  // spelling in tables.ts already carries the answer, and hard-coding it
   // meant adding a script required editing the table AND a boolean in here,
   // with nothing linking the two. Miss the second and the mark silently
   // centres on the wrong half, which is exactly how Bangla Re was wrong.

@@ -9,7 +9,12 @@ import {
 import { SCRIPTS } from '../state';
 import Swara from './Swara.vue';
 
-const notes = ref('$srgm {p}d nu-');
+// An in-beat meend on purpose: the playground renders ONE beat, and a
+// cross-beat opener (`sq`) draws a hook with nothing to join — correct, but it
+// reads as broken with no next beat on screen. A balanced `q…e` spans its own
+// notes, so the default shows the complete glide alongside chhand, kan, tivra
+// and an octave dot.
+const notes = ref('$qsrgme {p}d Mu-');
 const lang = ref<SwarlipiScript>('punjabi');
 const sizePx = ref(40);
 const bold = ref(false);
@@ -187,8 +192,15 @@ const copyUnicode = async () => {
       </div>
       <p :class="[wrapClass, 'sw-unicode']">{{ unicode }}</p>
       <p class="sw-note">
-        Letters plus combining marks. Whether the marks show depends on the
-        destination font; chhand and meend have no plain-text form.
+        Letters plus combining marks — a one-way export for reading. Chhand,
+        meend and ghaseet are dropped, and a continuation-only beat exports as
+        nothing, so notation cannot be rebuilt from this text (<a
+          href="/api#what-is-lost"
+          >what is lost</a
+        >). Whether the marks are drawn depends on the destination font (<a
+          href="/guide/fonts"
+          >Swarlipi fonts</a
+        >).
       </p>
     </div>
 

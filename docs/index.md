@@ -25,6 +25,10 @@ features:
     details: Letters are real Unicode. Selection, search, copy and screen readers just work, and a plain-text export carries the marks as combining characters.
   - title: Built for editors and print
     details: Zero runtime dependencies, an HTML string out, em-based sizing, currentColor marks, and a source range on every piece for a drawn caret.
+  - title: Fonts included, for everywhere else
+    details: Copied notation is plain Unicode, so its marks need a font that carries them. Three variable fonts ship with the package — install one and the text reads in Word, Pages or a PDF.
+    link: /guide/fonts
+    linkText: Download the fonts
 ---
 
 <div class="sw-home">

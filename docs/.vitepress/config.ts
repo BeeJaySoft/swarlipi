@@ -24,6 +24,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/getting-started', activeMatch: '/guide/' },
       { text: 'Notation', link: '/notation/', activeMatch: '/notation/' },
       { text: 'Playground', link: '/playground' },
+      { text: 'Fonts', link: '/guide/fonts' },
       { text: 'API', link: '/api' },
     ],
     sidebar: {
@@ -33,6 +34,7 @@ export default defineConfig({
           items: [
             { text: 'Getting started', link: '/guide/getting-started' },
             { text: 'Integration', link: '/guide/integration' },
+            { text: 'Fonts', link: '/guide/fonts' },
             { text: 'Omenad compatibility', link: '/guide/compatibility' },
           ],
         },
