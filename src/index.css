@@ -486,3 +486,53 @@
   display: inline-block;
   width: 0.45em;
 }
+
+/* Cross-beat bridging bars (`swarlipi/bridge`). A bar's inline
+   calc(%+px)/px style is the measured fallback for engines without CSS
+   anchor positioning: screen-exact, print-approximate. Where anchors are
+   supported the rules below pin the bar to the zone elements it bridges
+   (inline anchor-names assigned at measure time), and the browser re-derives
+   the geometry on EVERY layout pass — screen, a print clone, and the print
+   engine's own reflow at any custom scale, none of which JS can measure.
+   !important beats the inline fallbacks. */
+[data-sl-bar] {
+  position: absolute;
+  pointer-events: none;
+  /* Both ends run this fraction of a zone's height INTO their zones: the
+     piece bars end in chamfered path corners, and a bar that merely touches
+     them prints as a dashed seam at every junction. Mirrors BRIDGE_OVERLAP in
+     bridge.ts (a test fails if the two drift). */
+  --sl-bar-overlap: 0.35;
+}
+[data-sl-bar] svg {
+  display: block;
+}
+@supports (anchor-name: --a) {
+  [data-sl-bar] {
+    top: anchor(var(--sl-t) top) !important;
+    /* The box is the WHOLE mark zone; the svg's rect draws the band inside it.
+       Scaling the box down to the band instead let the browser round it
+       differently from the fragment bars, leaving the pieces a quarter of a
+       device pixel thicker than the bridge between them. */
+    height: anchor-size(var(--sl-t) height) !important;
+  }
+  /* Start pinned to a zone's right edge; row-wrap first pieces (no end
+     anchor) run to the container edge instead. */
+  [data-sl-bar].sl-bar-a {
+    left: calc(
+      anchor(var(--sl-a) right) - anchor-size(var(--sl-t) height) *
+        var(--sl-bar-overlap)
+    ) !important;
+    width: auto !important;
+    right: 0;
+  }
+  /* End pinned to a zone's left edge; row-wrap second pieces (no start
+     anchor) keep their inline left of 0. */
+  [data-sl-bar].sl-bar-b {
+    right: calc(
+      anchor(var(--sl-b) left) - anchor-size(var(--sl-t) height) *
+        var(--sl-bar-overlap)
+    ) !important;
+    width: auto !important;
+  }
+}

@@ -545,9 +545,9 @@ describe('half-finished entries', () => {
   });
 });
 
-// MEEND_BAR_RATIO is the single source for the glide's stroke weight, but two
-// consumers can't import it: the stylesheet, and the app's print anchor rule.
-// They mirror the number instead, so pin the mirrors here.
+// MEEND_BAR_RATIO is the single source for the glide's stroke weight, but the
+// stylesheet can't import it and mirrors the number as --sl-bar-ratio, so pin
+// the mirror here.
 describe('MEEND_BAR_RATIO', () => {
   const css = readFileSync(new URL('./index.css', import.meta.url), 'utf-8');
 

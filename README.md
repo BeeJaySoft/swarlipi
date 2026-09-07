@@ -42,18 +42,18 @@ keys every mark position off the `.sl-<script>` class. Scripts: `punjabi`,
 
 ### Contract (things an integrator may touch)
 
-| Hook                | Meaning                                                                                                                       |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `.sl-wrap`          | Wrapper. `font-size: calc(1em * var(--sl-scale))`, `line-height: 1.9`.                                                        |
-| `--sl-scale`        | Optical bump vs. surrounding text (default `1.08`). Multiply it back in if you override the wrapper's font-size.              |
-| `.sl-bold`          | Bold weight (700). Normal weight is 500.                                                                                      |
-| `--font-sl`         | Letter face per script (defaults to the Noto Sans script faces; the CSS does **not** fetch fonts — load them yourself).       |
-| `.sl-mz`, `.sl-mbr` | Meend / ghaseet mark zones. Cross-beat spans are the host's job: bridge consecutive zones with a bar (see the app's overlay). |
-| `[data-sl-bar]`     | Attribute the host puts on its bridging bars; the CSS anchor-positioning rules for print live in the host.                    |
-| `--sl-mz-h`         | Mark-zone height (`0.34em`). `--sl-bar` multiplies it, so `.sl-mz` must keep taking its height from this variable.            |
-| `--sl-bar-ratio`    | Fraction of the zone its bar fills. Mirrors `MEEND_BAR_RATIO` — a test fails if the two drift. Use it, do not re-derive it.   |
-| `--sl-bar`          | Resulting stroke weight, and the ghaseet bracket's border width.                                                              |
-| `--sl-mbr-leg`      | Ghaseet bracket leg length below the bar. Its box is `leg + bar`, so a heavier bar thickens ink without shortening legs.      |
+| Hook                | Meaning                                                                                                                     |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `.sl-wrap`          | Wrapper. `font-size: calc(1em * var(--sl-scale))`, `line-height: 1.9`.                                                      |
+| `--sl-scale`        | Optical bump vs. surrounding text (default `1.08`). Multiply it back in if you override the wrapper's font-size.            |
+| `.sl-bold`          | Bold weight (700). Normal weight is 500.                                                                                    |
+| `--font-sl`         | Letter face per script (defaults to the Noto Sans script faces; the CSS does **not** fetch fonts — load them yourself).     |
+| `.sl-mz`, `.sl-mbr` | Meend / ghaseet mark zones. A cross-beat span is bridged between consecutive zones by `swarlipi/bridge`.                    |
+| `[data-sl-bar]`     | A bridging bar. Positioned by the stylesheet: absolute, and anchor-pinned to its zones where the engine supports anchors.   |
+| `--sl-mz-h`         | Mark-zone height (`0.34em`). `--sl-bar` multiplies it, so `.sl-mz` must keep taking its height from this variable.          |
+| `--sl-bar-ratio`    | Fraction of the zone its bar fills. Mirrors `MEEND_BAR_RATIO` — a test fails if the two drift. Use it, do not re-derive it. |
+| `--sl-bar`          | Resulting stroke weight, and the ghaseet bracket's border width.                                                            |
+| `--sl-mbr-leg`      | Ghaseet bracket leg length below the bar. Its box is `leg + bar`, so a heavier bar thickens ink without shortening legs.    |
 
 **Derived, do not set:** `--sl-mbr-top` is computed from that script's
 `--sl-dot-a-top` minus the W tick's reach (`--sl-tick-reach`, itself the sum of
@@ -89,23 +89,39 @@ assets / in the npm tarball, never as committed binaries.
 The renderer draws per-beat fragments (hook / bar / hook), each wrapping the
 note its glide leaves from or arrives at, so a marker costs no inline width and
 `qs` draws the same picture as `sq`. Joining the fragments across beats is
-layout work the host must do, because only the host knows where beat cells
-land. The reference implementation is `NotationMeendOverlay.vue` in the
-Kirtan/Sangeet Notation app.
-
-Bridge thickness must come from `MEEND_BAR_RATIO`, not a measurement:
+layout work, and `swarlipi/bridge` does the measuring: given the container,
+the beat cells and which beats pair, it returns one bar per gap between
+consecutive fragments along a span (row wraps included).
 
 ```ts
-import { MEEND_BAR_RATIO } from 'swarlipi';
-// ink height as a fraction of the zone's box — scale-free, so it stays right
-// when print re-lays-out at a font size no screen measurement can predict
-const slabRatio = MEEND_BAR_RATIO; // .sl-mz; a ghaseet's is --sl-bar / its box
+import { measureBridges, bridgeElement } from 'swarlipi/bridge';
+
+function drawBridges() {
+  // Bars from the last measure hold stale geometry: replace, never append to.
+  for (const old of container.querySelectorAll('[data-sl-bar]')) old.remove();
+  const bars = measureBridges({
+    container, // position: relative; the cells are its descendants
+    cellAt: (i) => cells[i], // beat cell per flat beat index
+    spans: [{ from: 2, to: 5 }], // which beats pair — the host's rule
+    anchorPrefix: '--bridge-0', // unique per container on the page
+  });
+  for (const bar of bars) container.append(bridgeElement(bar));
+}
 ```
 
-Size the bridge's box to the WHOLE zone and draw the band inside it at that
-ratio. Sizing the box to the band instead lets the browser round it differently
-from the fragment bars, and the fragments come out visibly thicker at the
-junctions.
+`bridgeStyle` / `bridgeClass` / `bridgeMarkup` are the same thing split up for
+a template layer (put `data-sl-bar` on the element). Each bar carries two
+geometries: a measured `calc(% + px)` fallback, and inline `anchor-name`s on
+the zones it joins, which the stylesheet's `[data-sl-bar]` rules pin the bar
+to where CSS anchor positioning is supported. The anchored geometry re-derives
+itself on every layout pass, so it survives print, where the page re-lays-out
+at a size no screen measurement can predict.
+
+Call it again when the cells move (resize, font load, font-size change) and
+when a beat re-renders: the anchor names are inline styles on rendered output, so a
+re-render drops them. Which beats pair is not the package's call; the notation
+app's rules live in `@np/notation/meend` (adjacent beats pair on `q`/`e`
+alone, longer glides need a `w`/`W` in every beat between).
 
 ## Acknowledgements
 

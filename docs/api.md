@@ -11,6 +11,7 @@ import {
   type SwarlipiRenderOptions,
 } from 'swarlipi';
 import 'swarlipi/style.css';
+import { measureBridges, bridgeElement } from 'swarlipi/bridge';
 import { SAMPLE_GROUPS, CROSS_BEAT_SAMPLES } from 'swarlipi/samples';
 import { SYMBOL_GROUPS } from 'swarlipi/reference';
 ```
@@ -44,8 +45,56 @@ and its vowel sign.
 ## `MEEND_BAR_RATIO`
 
 The thickness of a meend or ghaseet line as a fraction of its mark zone's
-height. The one number a host uses to draw cross-beat bridges that match the
-fragments. `--sl-bar-ratio` in the stylesheet mirrors it.
+height. `swarlipi/bridge` draws its bars from it; `--sl-bar-ratio` in the
+stylesheet mirrors it.
+
+## `swarlipi/bridge`
+
+Joins the per-beat glide fragments across beats. Browser only: it measures
+the DOM.
+
+### `measureBridges({ container, cellAt, spans, anchorPrefix })`
+
+Returns a `BridgeBar[]`, one per gap between consecutive fragments along each
+span, two where a span wraps to the next row.
+
+- `container: HTMLElement`: the positioned element the bars are placed in.
+  The beat cells must be its descendants.
+- `cellAt: (beatIndex) => Element | null | undefined`: the beat cell for a
+  flat beat index.
+- `spans: { from: number; to: number }[]`: which beats pair. Spans with
+  `to <= from` are skipped; an in-beat pair draws itself.
+- `anchorPrefix: string`: a dashed-ident (`--x`) unique per container on the
+  page. Each fragment along a span gets an inline `anchor-name` under it.
+
+Every bar carries a measured fallback (`calc(% + px)` left and width, px top
+and height) and the anchor names of the zones it joins. The stylesheet's
+`[data-sl-bar]` rules pin it to those zones where the engine supports CSS
+anchor positioning, and the browser re-derives the geometry on every layout
+pass. That is what makes the bridges print: the print engine re-lays-out at
+paper width with print-media font sizes, which no screen measurement can
+predict. `slabRatio` is the band's height as a fraction of the box, scale-free
+for the same reason.
+
+### `bridgeElement(bar, doc?)`
+
+A ready `<div data-sl-bar>` with the bar's style and ink. Append it to the
+container, after removing the bars from the previous measure: their geometry
+is stale, and the anchor names they reference may be gone.
+
+### `bridgeStyle(bar)`, `bridgeClass(bar)`, `bridgeMarkup(bar)`
+
+The pieces of `bridgeElement` for a template layer: the inline style object
+(the measured fallback plus the `--sl-t` / `--sl-a` / `--sl-b` anchor names),
+the `sl-bar-a` / `sl-bar-b` classes that say which ends are zone-pinned, and
+the inner svg that draws the band. Put `data-sl-bar` on the element yourself.
+
+### `BRIDGE_ZONE_SELECTOR`, `BRIDGE_OVERLAP`
+
+The fragment selector (`.sl-mz, .sl-mbr`), useful for deciding whether a DOM
+mutation needs a re-measure, and the fraction of a zone's height each bar
+runs into its zones so the junctions print seamless. A test keeps the
+stylesheet's anchor rules on the same value.
 
 ## `escapeHtml(value)`
 

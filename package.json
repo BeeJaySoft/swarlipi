@@ -10,6 +10,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./style.css": "./src/index.css",
+    "./bridge": "./src/bridge.ts",
     "./samples": "./src/samples.ts",
     "./reference": "./src/reference.ts"
   },

@@ -34,6 +34,9 @@
  */
 
 import tables from './tables.json';
+import { MEEND_BAR_RATIO, MK_BAR_UNITS, MK_FRAME_UNITS } from './meend-metrics';
+
+export { MEEND_BAR_RATIO };
 
 // ---------------------------------------------------------------------------
 // Standalone: the three tiny helpers this renderer shares with @np/notation
@@ -452,23 +455,10 @@ const MK_Q_PATH =
 const MK_E_PATH =
   'M2.07 0.0Q49.81 0.0 84.83 5.76Q100.0 8.73 100.0 11.91L99.31 12.0H88.28Q87.05 12.0 84.83 9.4' +
   'Q76.78 6.4 59.31 5.6Q37.16 4.5 0.69 4.5L0.0 4.4V0.19Q0.0 0.0 2.07 0.0Z';
-// Shared vertical frame for all three outlines.
-const MK_FRAME_UNITS = 12;
-// Bar band: the top 4.5 of the frame. The hooks' inner edges leave their join
-// at the same 4.5 (the `4.5`/`4.4` pairs above) so the stroke keeps one weight
-// from curl to curl.
-const MK_BAR_UNITS = 4.5;
+// Frame and bar band (the `4.5`/`4.4` pairs above) live in meend-metrics.ts.
 // The bar's ends step in by this much so a piece butting against the next
 // fragment shows no corner.
 const MK_CHAMFER = 0.19;
-/**
- * Fraction of a mark zone's height taken by the glide's bar — the single
- * source for the stroke weight. Consumed by the W path below, by the
- * stylesheet's `--sl-bar-ratio` (guarded by a test in swarlipi.spec.ts), and
- * by the app overlay's cross-beat bridge slab, so a fragment bar and the
- * bridge continuing it can never disagree on thickness.
- */
-export const MEEND_BAR_RATIO = MK_BAR_UNITS / MK_FRAME_UNITS;
 
 const MK_W_PATH =
   `M1.1 0.0H98.9L100.0 ${MK_CHAMFER}V${MK_BAR_UNITS - MK_CHAMFER}` +

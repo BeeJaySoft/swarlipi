@@ -12,8 +12,8 @@ beat lands on the page, is the host's work. This page is the contract.
 | `.sl-bold`          | Bold weight (700). Normal weight is 500.                                                                                   |
 | `--font-sl`         | Letter face per script. Defaults to the Noto Sans script faces; the CSS does not fetch fonts.                              |
 | `.sl-n`             | A note. `noteClass` (below) adds to it.                                                                                    |
-| `.sl-mz`, `.sl-mbr` | Meend and ghaseet mark zones. A cross-beat span is bridged by the host between consecutive zones.                          |
-| `[data-sl-bar]`     | Attribute for the host's bridging bars; anchor-positioning rules for print live in the host.                               |
+| `.sl-mz`, `.sl-mbr` | Meend and ghaseet mark zones. A cross-beat span is bridged between consecutive zones by `swarlipi/bridge`.                 |
+| `[data-sl-bar]`     | A bridging bar. Positioned by the stylesheet: absolute, and anchor-pinned to its zones where the engine supports anchors.  |
 | `--sl-mz-h`         | Mark-zone height (`0.34em`). `--sl-bar` multiplies it, so `.sl-mz` must keep taking its height from this variable.         |
 | `--sl-bar-ratio`    | Fraction of the zone its bar fills. Mirrors `MEEND_BAR_RATIO`; a test fails if the two drift. Use it, do not re-derive it. |
 | `--sl-bar`          | Resulting stroke weight, and the ghaseet bracket's border width.                                                           |
@@ -69,24 +69,38 @@ ratio, so the agreement survives print laying the cells out narrower.
 The renderer draws per-beat fragments: a hook where a glide leaves a note, a
 bar where it passes through a beat, a hook where it arrives. Each fragment
 wraps the note it belongs to, so a marker costs no inline width and `qs` draws
-the same picture as `sq`. Joining the fragments across beats is layout work
-the host does, because only the host knows where the cells land.
-
-Bridge thickness must come from `MEEND_BAR_RATIO`, not from a measurement:
+the same picture as `sq`. Joining the fragments across beats is layout work,
+and `swarlipi/bridge` does the measuring. The host supplies what only it
+knows: the container, the beat cells, and which beats pair.
 
 ```ts
-import { MEEND_BAR_RATIO } from 'swarlipi';
+import { measureBridges, bridgeElement } from 'swarlipi/bridge';
 
-// ink height as a fraction of the zone's box — scale-free, so it stays right
-// when print re-lays-out at a size no screen measurement can predict
-const slabRatio = MEEND_BAR_RATIO;
+function drawBridges() {
+  // Bars from the last measure hold stale geometry: replace, never append to.
+  for (const old of container.querySelectorAll('[data-sl-bar]')) old.remove();
+  const bars = measureBridges({
+    container, // position: relative; the cells are its descendants
+    cellAt: (i) => cells[i], // beat cell per flat beat index
+    spans: [{ from: 2, to: 5 }],
+    anchorPrefix: '--bridge-0', // unique per container on the page
+  });
+  for (const bar of bars) container.append(bridgeElement(bar));
+}
 ```
 
-Size the bridge's box to the whole zone and draw the band inside it at that
-ratio. Sizing the box to the band instead lets the browser round it
-differently from the fragment bars, and the fragments come out visibly thicker
-at the junctions. See [Cross-beat glides](/notation/cross-beat) for the
-fragments themselves.
+A template layer uses `bridgeStyle`, `bridgeClass` and `bridgeMarkup` instead
+and puts `data-sl-bar` on the element itself. Each bar carries a measured
+`calc(% + px)` fallback and the anchor names of the zones it joins; the
+stylesheet pins the bar to those zones where CSS anchor positioning is
+supported, so print, which re-lays-out at a size no screen measurement can
+predict, re-derives the geometry without JS.
+
+Call it again when the cells move (resize, font load, font-size change) and
+when a beat re-renders, because the anchor names are inline styles on rendered
+output. `BRIDGE_ZONE_SELECTOR` tells a `MutationObserver` which added nodes
+matter. See the [API](/api#swarlipi-bridge) for the full contract and
+[Cross-beat glides](/notation/cross-beat) for the fragments themselves.
 
 ## Print
 
