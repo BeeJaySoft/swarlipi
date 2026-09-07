@@ -491,6 +491,15 @@ def build_gpos(
 # ----------------------------------------------------------------------------- metadata
 
 
+def font_revision(version: str) -> float:
+    """`head.fontRevision` is a 16.16 Fixed, so semver folds to major.MMPP:
+    0.1.1 -> 0.0101. Distinct per release and ordered for minor/patch < 100.
+    Name ID 5 keeps the readable semver string. Noto's own 2.004 was inherited
+    here through 0.1.0, which made every build the same revision to a host."""
+    major, minor, patch = (int(part) for part in version.split("."))
+    return major + minor / 100 + patch / 10_000
+
+
 def rename(font: TTFont, script_label: str, noto_family: str) -> None:
     family = f"{FAMILY} {script_label}"
     ps_prefix = f"{FAMILY}{script_label}"
@@ -531,6 +540,7 @@ def rename(font: TTFont, script_label: str, noto_family: str) -> None:
     for nid, value in fixed.items():
         name.setName(value, nid, 3, 1, 0x409)
     font["OS/2"].achVendID = VENDOR_ID
+    font["head"].fontRevision = font_revision(VERSION)
 
 
 def name_instances(font: TTFont, ps_prefix: str) -> None:

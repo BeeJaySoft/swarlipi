@@ -15,7 +15,9 @@ API, so a change to either that breaks a consumer's CSS is a breaking change.
   are now distinct and named `SwarlipiGurmukhi-Regular` / `-Medium` /
   `-SemiBold` / `-Bold`, which is also what a font panel that de-duplicates
   on those names needs.
-- Font version reads 0.1.1, so an installed 0.1.0 is not mistaken for it.
+- The font version is 0.1.1 in `head.fontRevision` as well as the version
+  string. 0.1.0 had left the revision at Noto's inherited 2.004, so a host
+  comparing revisions saw every build as the same font.
 
 Nothing changed in the renderer or the outlines: shaping, mark placement and
 the glyph set are identical to 0.1.0.
