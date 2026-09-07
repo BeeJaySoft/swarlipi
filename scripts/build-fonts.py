@@ -69,7 +69,7 @@ OUT_DEFAULT = PKG / "fonts"
 
 FAMILY = "Swarlipi"
 VENDOR_ID = "SWLP"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 HOMEPAGE = "https://swarlipi.beejaysoft.com"
 
 # Pinned upstream releases (notofonts GitHub). Bump deliberately.
@@ -533,6 +533,36 @@ def rename(font: TTFont, script_label: str, noto_family: str) -> None:
     font["OS/2"].achVendID = VENDOR_ID
 
 
+def name_instances(font: TTFont, ps_prefix: str) -> None:
+    """Dedupe the named instances and give each one a PostScript name.
+
+    Noto's slim-variable ships every instance TWICE (verified in the source),
+    which is malformed, and none of them carries a `postscriptNameID` — so a
+    host has to invent one, and macOS synthesises `Family-Regular_Bold` from
+    the default instance's name. Naming them properly yields the expected
+    `SwarlipiGurmukhi-Bold`, and a font panel that de-duplicates on these
+    names has four distinct ones to work with instead of four copies of the
+    default's.
+    """
+    fvar = font["fvar"]
+    name = font["name"]
+    default_ps = name.getDebugName(6)
+    kept, seen = [], set()
+    for inst in fvar.instances:
+        key = tuple(sorted(inst.coordinates.items()))
+        if key in seen:
+            continue
+        seen.add(key)
+        style = (name.getDebugName(inst.subfamilyNameID) or "Regular").replace(" ", "")
+        ps = f"{ps_prefix}-{style}"
+        # The default instance shares name ID 6, so the two can never disagree.
+        inst.postscriptNameID = (
+            6 if ps == default_ps else name.addName(ps, platforms=((3, 1, 0x409),))
+        )
+        kept.append(inst)
+    fvar.instances = kept
+
+
 def lift_ascender(font: TTFont, marks: dict[int, str], above_line: int) -> None:
     """hhea/typo ascender (line spacing) covers ONE mark on the dot line;
     usWinAscent (Windows clipping) covers the full tivra + dot stack."""
@@ -567,6 +597,7 @@ def build_one(cache: Path, script: str, out: Path) -> Path:
     build_gpos(font, marks, above_line, variants, right_matras, ni_adv)
     lift_ascender(font, marks, above_line)
     rename(font, SCRIPTS[script], fam)
+    name_instances(font, f"{FAMILY}{SCRIPTS[script]}")
     # Keep glyph names in the file (Noto Sans Gurmukhi ships a nameless post 3),
     # so hb-shape and font tools show `uni0331.w550` rather than a glyph id.
     post = font["post"]

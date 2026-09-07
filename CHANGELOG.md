@@ -4,6 +4,22 @@ All notable changes to `swarlipi`. Versions follow [semver](https://semver.org):
 the rendered markup and the class names in `style.css` are part of the public
 API, so a change to either that breaks a consumer's CSS is a breaking change.
 
+## 0.1.1
+
+### Fixed
+
+- **Fonts: the named instances are deduplicated and each carries a PostScript
+  name.** Noto's slim-variable ships every instance twice, and none of them
+  has a `postscriptNameID`, so a host has to invent one — macOS synthesised
+  `SwarlipiGurmukhi-Regular_Bold` from the default instance. The four styles
+  are now distinct and named `SwarlipiGurmukhi-Regular` / `-Medium` /
+  `-SemiBold` / `-Bold`, which is also what a font panel that de-duplicates
+  on those names needs.
+- Font version reads 0.1.1, so an installed 0.1.0 is not mistaken for it.
+
+Nothing changed in the renderer or the outlines: shaping, mark placement and
+the glyph set are identical to 0.1.0.
+
 ## 0.1.0
 
 First published release.
