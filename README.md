@@ -75,14 +75,28 @@ cluster (never between a consonant and its vowel sign, which splits the
 syllable in CoreText/Word). Whether they show depends on the destination
 font — install a Swarlipi font for guaranteed rendering.
 
-## Fonts (parked)
+## Fonts (built, not shipped)
 
 The plain-text export only shows its marks where the destination font can
-shape them. The fix is a **Swarlipi font** per script — Noto Sans + the six
-combining marks with GPOS anchors (variable, weight 400–700). A working
-fontTools build and a GitHub Actions workflow are preserved on
-mbaljeetsingh/np-mono#419 (not in the repo yet); fonts will ship as release
-assets / in the npm tarball, never as committed binaries.
+shape them. The fix is a **Swarlipi font** per script: Noto Sans `<Script>`
+plus the six combining marks with GPOS anchors, one variable font per script
+(weight 400–700), renamed because "Noto" is an OFL Reserved Font Name. A font
+cannot stretch chhand arcs or meend bars across letters, so the renderer keeps
+that role; the font is for "everything else": Word, Pages, PDFs, anywhere the
+copied text lands and the font is installed.
+
+`scripts/build-fonts.py` builds them from pinned Noto releases (fontTools;
+`pnpm --filter swarlipi build:fonts` → `fonts/`, git-ignored, as is the
+`.noto-cache/` of Noto zips). The manual-only workflow
+`.github/workflows/swarlipi-fonts.yml` does the same on CI and uploads a zip.
+Binaries are never committed; when the fonts ship they go out as a release
+asset and inside the npm tarball (`fonts` added to `files`).
+
+Shipping is parked until the package publishes or copy-as-text goes beyond
+admins. Known state when parked: verified in HarfBuzz, CoreText and Chromium;
+the Chromium check of the `calt` komal-underline variants was not re-run after
+the mark-bearing fix; anchor x is static (ink centre at Regular), so a bold
+dot can sit a few units off-centre; Windows Word and LibreOffice untested.
 
 ## Cross-beat meend
 
