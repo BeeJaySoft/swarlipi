@@ -1,10 +1,19 @@
-# Symbol reference
+# Symbols
 
-Every form the renderer draws, live. The controls apply to the whole page.
+Every form the renderer draws, live, with the geometry explained. The controls
+apply to the whole page. For the character that produces each one, see
+[What to type](/notation/keymap).
 The sample set is exported as `swarlipi/samples`, so what you see here is what
 the package's own tests and the notation app's checks use.
 
 <SheetControls />
+
+## Sizes
+
+The marks are CSS and SVG, not glyphs, so they scale with the letters instead
+of being drawn once at one size. 18px is the notation grid's beat cell.
+
+<SizeWaterfall />
 
 ## Letters
 

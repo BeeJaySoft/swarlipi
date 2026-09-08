@@ -12,7 +12,7 @@ const BEATS = ['$mpdp', '@gm', '@nlr', 'su'];
       <span class="sw-label">{{ s.label }}</span>
       <div class="sw-hero-beats">
         <span v-for="(b, i) in BEATS" :key="i" class="sw-hero-beat">
-          <Swara :notes="b" :lang="s.id" size="1.5rem" />
+          <Swara :notes="b" :lang="s.id" size="2rem" />
         </span>
       </div>
     </div>
@@ -23,7 +23,7 @@ const BEATS = ['$mpdp', '@gm', '@nlr', 'su'];
 .sw-hero {
   display: grid;
   gap: 0.35rem;
-  width: 320px;
+  width: 380px;
   max-width: 100%;
   padding: 1rem 1.1rem 1.1rem;
   border: 1px solid var(--vp-c-divider);

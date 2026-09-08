@@ -4,9 +4,11 @@ import {
   renderSwarlipi,
   swarlipiWrapperClass,
   toUnicodeNotation,
-  type SwarlipiScript,
 } from 'swarlipi';
-import { SCRIPTS } from '../state';
+// Shared with every other surface: pick a script here and the symbols sheet,
+// the specimen and the samples all follow.
+import { SCRIPTS, bold, editing, lang, sizePx } from '../state';
+import ScriptSwitch from './ScriptSwitch.vue';
 import Swara from './Swara.vue';
 
 // An in-beat meend on purpose: the playground renders ONE beat, and a
@@ -15,10 +17,6 @@ import Swara from './Swara.vue';
 // notes, so the default shows the complete glide alongside chhand, kan, tivra
 // and an octave dot.
 const notes = ref('$qsrgme {p}d Mu-');
-const lang = ref<SwarlipiScript>('punjabi');
-const sizePx = ref(40);
-const bold = ref(false);
-const editing = ref(false);
 const showHtml = ref(false);
 
 const unicode = computed(() => toUnicodeNotation(notes.value, lang.value));
@@ -132,19 +130,7 @@ const copyUnicode = async () => {
     </div>
 
     <div class="sw-controls">
-      <div class="sw-seg" role="tablist" aria-label="Script">
-        <button
-          v-for="s in SCRIPTS"
-          :key="s.id"
-          type="button"
-          role="tab"
-          :aria-selected="lang === s.id"
-          :class="{ active: lang === s.id }"
-          @click="lang = s.id"
-        >
-          {{ s.label }}
-        </button>
-      </div>
+      <ScriptSwitch />
       <label class="sw-ctl">
         Size
         <input v-model.number="sizePx" type="range" min="16" max="96" />
@@ -198,7 +184,7 @@ const copyUnicode = async () => {
           href="/api#what-is-lost"
           >what is lost</a
         >). Whether the marks are drawn depends on the destination font (<a
-          href="/guide/fonts"
+          href="/fonts/"
           >Swarlipi fonts</a
         >).
       </p>

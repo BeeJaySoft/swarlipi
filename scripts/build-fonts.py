@@ -24,8 +24,10 @@ Per script:
      with the component's deltas plus the composite's offset deltas.
   3. Append MarkToBase + MarkToMark lookups to GPOS: every base glyph gets an
      above anchor on ONE uniform line per script (clearing the tallest matra —
-     the same "uniform dot line" rule the CSS renderer follows) and a below
-     anchor just under the baseline; marks stack (tivra + dot, komal + dot).
+     the same "uniform dot line" rule the CSS renderer follows), a tivra anchor
+     one band lower, off Ma's ink, and a below anchor just under the baseline.
+     Marks stack: a taar dot on a tivra bar returns to the dot line, so the
+     dots read as one line whether or not the note carries a bar.
   4. Komal is an underline, not a diacritic: width-bucketed underline variants
      (plain / matra-extended) are chosen by a `calt` contextual substitution on
      the preceding base, so it spans the letter like the CSS renderer's.
@@ -69,7 +71,7 @@ OUT_DEFAULT = PKG / "fonts"
 
 FAMILY = "Swarlipi"
 VENDOR_ID = "SWLP"
-VERSION = "0.1.2"
+VERSION = "0.1.3"
 HOMEPAGE = "https://swarlipi.beejaysoft.com"
 
 # Pinned upstream releases (notofonts GitHub). Bump deliberately.
@@ -89,7 +91,7 @@ SCRIPT_RANGES = {
 MARKS = {
     0x0307: "above",  # taar dot
     0x0308: "above",  # ati taar
-    0x030D: "above",  # tivra bar
+    0x030D: "tivra",  # tivra bar — its own line, see MA/TIVRA below
     0x0323: "below",  # mandra dot
     0x0324: "below",  # ati mandra
     0x0331: "below",  # komal underline
@@ -103,6 +105,15 @@ BUCKET = 50  # underline width buckets (font units)
 RIGHT_MATRAS = {"gurmukhi": (0x0A40, 0x0A3E), "devanagari": (0x0940, 0x093E), "bengali": (0x09C0, 0x09BE)}
 LEFT_MATRAS = {"gurmukhi": (), "devanagari": (), "bengali": (0x09C7, 0x09C8)}
 NI = {"gurmukhi": 0x0A28, "devanagari": 0x0928, "bengali": 0x09A8}
+# Ma is the ONLY letter that takes a tivra bar, and it is the shortest sargam
+# letter in every script (ink top 622 against 896/917 for the tallest matra).
+# So the bar gets its own anchor line off Ma's ink instead of riding the dots'
+# line, which has to clear Ni's matra — that is what left the bar floating
+# ~0.33em over Ma where the CSS renderer sets it ~0.03em clear.
+MA = {"gurmukhi": 0x0A2E, "devanagari": 0x092E, "bengali": 0x09AE}
+# Bar height, mirroring the renderer's `--sl-tivra-h` per script. Noto's own
+# U+030D is a 164-unit stroke, noticeably stubbier than the bar the app draws.
+TIVRA_H = {"gurmukhi": 260, "devanagari": 260, "bengali": 200}
 ABOVE_CLEARANCE = 50  # above the tallest base/matra ink
 BELOW_LINE = -70  # just under the baseline; sargam letters carry no below-matras
 
@@ -231,6 +242,26 @@ def add_marks(font: TTFont, latin: TTFont) -> dict[int, str]:
     for name in added.values():
         gdef.GlyphClassDef.classDefs[name] = 3
     return added
+
+
+def set_bar_height(font: TTFont, name: str, height: int) -> None:
+    """Raise the tivra bar's top edge to the renderer's height. Noto's U+030D
+    is 164 units against the CSS `--sl-tivra-h` of 260 (200 in Bengali), and a
+    stubbier bar is exactly the mismatch a reader sees between the app and a
+    copied line. Only the top edge moves: the ink bottom is what the anchors
+    are computed from, the 80-unit width already matches the renderer's
+    0.08em, and the wght deltas stay Noto's so the bar still grows with the
+    letters."""
+    glyph = font["glyf"][name]
+    coords = glyph.coordinates
+    if glyph.numberOfContours != 1 or len(coords) != 4:
+        raise SystemExit(f"{name}: expected a 4-point bar, got {len(coords)} points")
+    ys = [y for _, y in coords]
+    bottom, top = min(ys), max(ys)
+    for i, (x, y) in enumerate(coords):
+        if y == top:
+            coords[i] = (x, bottom + height)
+    glyph.recalcBounds(font["glyf"])
 
 
 # ----------------------------------------------------------------------------- komal underline
@@ -427,6 +458,7 @@ def build_gpos(
     font: TTFont,
     marks: dict[int, str],
     above_line: int,
+    tivra_line: int,
     komal_variants_: list[str],
     right_matras: dict[str, int],
     ni_adv: int,
@@ -434,9 +466,10 @@ def build_gpos(
     # Mark anchors: the point on the mark that lands on the base anchor. Above
     # marks hang GAP above the line (anchor = their bottom − GAP); below marks
     # hang GAP below (anchor = their top + GAP).
-    # Three mark classes: 'above' (dots/tivra, ink-centred), 'below' (dots,
-    # ink-centred), 'under' (komal underline, ADVANCE-centred like a text
-    # underline). Anchor = the point on the mark that lands on the base anchor.
+    # Four mark classes: 'above' (dots, ink-centred), 'tivra' (the bar, same
+    # form as 'above' but on its own lower line), 'below' (dots, ink-centred),
+    # 'under' (komal underline, ADVANCE-centred like a text underline).
+    # Anchor = the point on the mark that lands on the base anchor.
     mark_defs, mark_bounds = {}, {}
     sides = {marks[cp]: side for cp, side in MARKS.items()}
     sides[marks[0x0331]] = "under"
@@ -444,8 +477,10 @@ def build_gpos(
     for name, side in sides.items():
         b = glyph_bounds(font, name)
         mark_bounds[name] = b
-        if side == "above":
-            mark_defs[name] = ("above", otl.buildAnchor(0, int(b[1]) - GAP))
+        if side in ("above", "tivra"):
+            # Same form for both, so each rides GAP above whichever line its
+            # class anchors to.
+            mark_defs[name] = (side, otl.buildAnchor(0, int(b[1]) - GAP))
         elif side == "under":
             # Hug the letter: the underline's top sits at KOMAL_TOP.
             mark_defs[name] = ("under", otl.buildAnchor(0, int(b[3]) + (BELOW_LINE - KOMAL_TOP)))
@@ -460,6 +495,7 @@ def build_gpos(
         adv = font["hmtx"][name][0]
         mb.bases[name] = {
             "above": otl.buildAnchor(cx, above_line),
+            "tivra": otl.buildAnchor(cx, tivra_line),
             "below": otl.buildAnchor(cx, BELOW_LINE),
             "under": otl.buildAnchor(adv // 2, BELOW_LINE),
         }
@@ -471,6 +507,9 @@ def build_gpos(
     for name, adv in right_matras.items():
         mb.bases[name] = {
             "above": otl.buildAnchor(-ni_adv // 2, above_line),
+            # A matra never takes a tivra (only Ma does), but a class missing
+            # from a base's dict shapes as an unpositioned mark, not an error.
+            "tivra": otl.buildAnchor(-ni_adv // 2, tivra_line),
             "below": otl.buildAnchor(-ni_adv // 2, BELOW_LINE),
             "under": otl.buildAnchor(adv // 2, BELOW_LINE),
         }
@@ -484,6 +523,15 @@ def build_gpos(
         b = mark_bounds[name]
         if side == "above":
             mm.baseMarks[name] = {"above": otl.buildAnchor(0, int(b[3]) + GAP)}
+        elif side == "tivra":
+            # A taar dot on a tivra bar goes back to the DOT LINE, not GAP
+            # above the bar: the bar hangs below that line, and the dots have
+            # to read as one line whether or not a note carries a bar. The bar
+            # lands with its ink bottom at tivra_line + GAP, so its offset from
+            # its own outline is (tivra_line + GAP − b[1]); place the anchor to
+            # cancel that and leave the dot where a bare letter would put it.
+            delta = tivra_line + GAP - int(b[1])
+            mm.baseMarks[name] = {"above": otl.buildAnchor(0, above_line - delta)}
         else:
             # A dot below a komal underline hangs GAP under it (class 'below'
             # marks attach to 'under' marks and vice versa via the same anchor).
@@ -590,23 +638,20 @@ def name_instances(font: TTFont, ps_prefix: str) -> None:
 
 
 def lift_ascender(font: TTFont, marks: dict[int, str], above_line: int) -> None:
-    """hhea/typo ascender (line spacing) covers ONE mark on the dot line;
-    usWinAscent (Windows clipping) covers the full tivra + dot stack."""
-    dot_h = tivra_h = 0
+    """Line spacing (hhea/typo) and Windows clipping (usWinAscent) both cover a
+    dot on the dot line. That is the highest ink there is: the tivra bar
+    anchors BELOW that line, and a dot stacked on a bar returns to it, so no
+    stack reaches past a lone dot."""
+    dot_h = 0
     for cp, side in MARKS.items():
         if side != "above":
             continue
         b = glyph_bounds(font, marks[cp])
-        h = int(b[3] - b[1])
-        if cp == 0x030D:
-            tivra_h = h
-        else:
-            dot_h = max(dot_h, h)
-    single = above_line + GAP + dot_h + 20
-    full = above_line + GAP + tivra_h + GAP + dot_h + 20
-    font["hhea"].ascent = max(font["hhea"].ascent, single)
-    font["OS/2"].sTypoAscender = max(font["OS/2"].sTypoAscender, single)
-    font["OS/2"].usWinAscent = max(font["OS/2"].usWinAscent, full)
+        dot_h = max(dot_h, int(b[3] - b[1]))
+    top = above_line + GAP + dot_h + 20
+    font["hhea"].ascent = max(font["hhea"].ascent, top)
+    font["OS/2"].sTypoAscender = max(font["OS/2"].sTypoAscender, top)
+    font["OS/2"].usWinAscent = max(font["OS/2"].usWinAscent, top)
 
 
 # ----------------------------------------------------------------------------- build
@@ -617,10 +662,12 @@ def build_one(cache: Path, script: str, out: Path) -> Path:
     font = load_variable(fetch(cache, script), fam, build="full")
     latin = load_variable(fetch(cache, "latin"), NOTO["latin"][1])
     marks = add_marks(font, latin)
+    set_bar_height(font, marks[0x030D], TIVRA_H[script])
     variants, right_matras = komal_variants(font, marks[0x0331], script)
     above_line = script_ink_top(font, SCRIPT_RANGES[script]) + ABOVE_CLEARANCE
+    tivra_line = int(round(glyph_bounds(font, font.getBestCmap()[MA[script]])[3]))
     ni_adv = font["hmtx"][font.getBestCmap()[NI[script]]][0]
-    build_gpos(font, marks, above_line, variants, right_matras, ni_adv)
+    build_gpos(font, marks, above_line, tivra_line, variants, right_matras, ni_adv)
     lift_ascender(font, marks, above_line)
     rename(font, SCRIPTS[script], fam)
     name_instances(font, f"{FAMILY}{SCRIPTS[script]}")
@@ -637,7 +684,9 @@ def build_one(cache: Path, script: str, out: Path) -> Path:
     woff2 = ttf.with_suffix(".woff2")
     font.save(woff2)
     print(
-        f"  {ttf.name}: above line {above_line}, {len(base_glyphs(font))} bases anchored, "
+        f"  {ttf.name}: above line {above_line}, tivra line {tivra_line}, "
+        f"bar {TIVRA_H[script]}, "
+        f"{len(base_glyphs(font))} bases anchored, "
         f"{ttf.stat().st_size // 1024} KB ttf / {woff2.stat().st_size // 1024} KB woff2"
     )
     return ttf

@@ -145,8 +145,8 @@
 .vp-doc .sw-font-dl,
 .sw-font-dl {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 12px;
   padding: 12px 18px;
   min-width: 130px;
   border: 1px solid var(--vp-c-divider);
@@ -165,6 +165,21 @@
 .sw-font-dl:hover {
   border-color: var(--vp-c-brand-1);
   background: var(--vp-c-bg-elv);
+}
+.sw-dl-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sw-dl-icon {
+  flex: 0 0 auto;
+  /* Pinned to the card's trailing edge whatever the label's width. */
+  margin-left: auto;
+  color: var(--vp-c-text-3);
+  transition: color 0.2s;
+}
+.sw-font-dl:hover .sw-dl-icon {
+  color: var(--vp-c-brand-1);
 }
 .sw-font-dl strong {
   color: var(--vp-c-text-1);

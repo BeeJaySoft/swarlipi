@@ -4,6 +4,27 @@ All notable changes to `swarlipi`. Versions follow [semver](https://semver.org):
 the rendered markup and the class names in `style.css` are part of the public
 API, so a change to either that breaks a consumer's CSS is a breaking change.
 
+## 0.1.3
+
+### Fixed
+
+- **The tivra bar now sits on Ma, not on the dot line.** In the fonts, every
+  above mark shared one anchor line per script — and that line has to clear the
+  tallest ink in the script, Ni's matra. Ma is the shortest sargam letter
+  (ink top 622 against 896/917), so a tivra bar floated ~0.33em over it: the
+  same notation read correctly in the renderer and wrong when copied into Word
+  or a PDF. `U+030D` now has its own mark class anchored off Ma's ink, one GAP
+  clear of the letter, which is what the CSS renderer has always done with
+  `--sl-tivra-top`. A taar dot stacked on a bar returns to the dot line, so the
+  dots still read as one line whether or not a note carries a bar. Measured
+  with `hb-shape` in all three scripts: bar ink bottom = Ma ink top + 40, the
+  bar does not move when a dot is added, and a dot on a bar lands at the same
+  y as a dot on a bare letter.
+
+  The bar's own height is unchanged and still shorter than the renderer's
+  (0.16em against 0.26em) — it is Noto's `U+030D` glyph as it ships, and
+  rescaling it would mean reworking its variable deltas.
+
 ## 0.1.2
 
 ### Added

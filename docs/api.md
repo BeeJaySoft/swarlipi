@@ -20,7 +20,7 @@ import { SYMBOL_GROUPS } from 'swarlipi/reference';
 
 Renders one beat's notation as an HTML string. Never touches the DOM.
 
-- `notes: string`: the beat, in the [Omenad keymap](/guide/compatibility).
+- `notes: string`: the beat, in the [Omenad keymap](/notation/compatibility).
 - `script: SwarlipiScript`: `'punjabi' | 'hindi' | 'bangla' | 'english'`. An
   unknown value degrades to `'english'` rather than throwing, since the value
   often comes from a cookie.
@@ -71,7 +71,7 @@ cannot be recovered from the text it produces.
   with a separator of your own if an empty beat would be ambiguous.
 - **Kan and murki are indistinguishable**, since both become parentheses.
 - **Whether the marks are drawn depends on the destination font.** The
-  [Swarlipi fonts](/guide/fonts) exist for exactly this; in a font without the
+  [Swarlipi fonts](/fonts/) exist for exactly this; in a font without the
   marks the letters still read and the marks are dropped or misplaced.
 
 ## `MEEND_BAR_RATIO`
@@ -154,17 +154,17 @@ that build markup around the output.
 ## `swarlipi/style.css`
 
 The stylesheet the markup needs. Prefixed `sl-`; see the
-[hooks table](/guide/integration#the-stylesheets-hooks).
+[hooks table](/guide/integration#the-stylesheet-s-hooks).
 
 ## `swarlipi/samples`
 
 `SAMPLE_GROUPS`: single-beat samples grouped by feature, each `{ title, note?,
 samples }`. `CROSS_BEAT_SAMPLES`: runs of consecutive beats,
-`{ title, note?, beats }`. The source of the [Symbol reference](/notation/).
+`{ title, note?, beats }`. The source of the [Symbols](/notation/).
 
 ## `swarlipi/reference`
 
 `SYMBOL_GROUPS`: the symbol mapping as data, grouped `{ id, title, entries }`
 with each entry `{ key, name, example }`. The source of the
-[mapping table](/guide/compatibility#the-mapping) and of the notation app's
+[keymap table](/notation/keymap) and of the notation app's
 in-editor guide sheet.

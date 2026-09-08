@@ -5,8 +5,8 @@ only ever sees one beat, so it draws what that beat knows: an opening hook on
 the note the glide leaves, a bar through a beat it passes, a closing hook on
 the note it arrives at. `swarlipi/bridge` joins those fragments into one line
 once the host says where the beat cells are and which beats pair. The samples
-below show the fragments as the renderer emits them, cell by cell, without a
-bridge.
+below are bridged by that module, live, from the spans each sample declares —
+uncheck **Join the fragments** to see what the renderer emitted on its own.
 
 <SheetControls />
 

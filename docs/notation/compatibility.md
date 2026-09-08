@@ -12,15 +12,9 @@ in the real script, with the marks drawn around them.
 
 <SwaraRow notes="sRgM {p}d nu-" />
 
-## The mapping
-
-Every symbol, with a live example in the script you pick. This table and the
-notation app's in-editor guide render from the same data, `swarlipi/reference`,
-so the two cannot drift.
-
-<SheetControls />
-
-<SymbolTable />
+The character-by-character mapping lives on [Symbols](/notation/keymap),
+rendered from `swarlipi/reference` — the same data the notation app's in-editor
+guide uses.
 
 ## What is different by design
 

@@ -1,22 +1,11 @@
 <script setup lang="ts">
-import { SCRIPTS, bold, editing, lang, sizePx } from '../state';
+import { bold, editing, sizePx } from '../state';
+import ScriptSwitch from './ScriptSwitch.vue';
 </script>
 
 <template>
   <div class="sw-controls">
-    <div class="sw-seg" role="tablist" aria-label="Script">
-      <button
-        v-for="s in SCRIPTS"
-        :key="s.id"
-        type="button"
-        role="tab"
-        :aria-selected="lang === s.id"
-        :class="{ active: lang === s.id }"
-        @click="lang = s.id"
-      >
-        {{ s.label }}
-      </button>
-    </div>
+    <ScriptSwitch />
     <label class="sw-ctl">
       Size
       <input v-model.number="sizePx" type="range" min="16" max="64" />

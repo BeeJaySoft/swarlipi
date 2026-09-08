@@ -111,8 +111,7 @@ install format) and `.woff2` (for the web), plus `swarlipi-fonts.css` with the
 
 Desktop install: download the `.ttf` from the same directory, for example
 `https://cdn.jsdelivr.net/npm/swarlipi@0.1/fonts/SwarlipiGurmukhi-Variable.ttf`,
-and double-click it. `@0.1` follows patch releases; pin an exact version
-(`swarlipi@0.1.2`) if you would rather nothing moved.
+and double-click it.
 
 Each script font also carries **Noto Sans's basic Latin** (letters, digits,
 punctuation, same weight axis), so a heading or section label can share the
