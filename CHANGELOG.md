@@ -6,6 +6,30 @@ API, so a change to either that breaks a consumer's CSS is a breaking change.
 
 ## 0.1.3
 
+### Releasing a font change
+
+`@font-face` and the download links on the docs site point at the `@0.1`
+range, so integrators get a font fix without editing a URL. The cost is that
+jsDelivr caches a range URL per edge node (`s-maxage=43200`, so twelve hours
+from each node's own fetch) and for a week in the browser
+(`max-age=604800`). After publishing, purge **all seven** range URLs — the
+three `.woff2`, which is what a page renders from, the three `.ttf`, which is
+what the download buttons hand out, and the stylesheet:
+
+```sh
+for f in Gurmukhi Devanagari Bengali; do
+  curl -s "https://purge.jsdelivr.net/npm/swarlipi@0.1/fonts/Swarlipi$f-Variable.woff2" >/dev/null
+  curl -s "https://purge.jsdelivr.net/npm/swarlipi@0.1/fonts/Swarlipi$f-Variable.ttf" >/dev/null
+done
+curl -s "https://purge.jsdelivr.net/npm/swarlipi@0.1/fonts/swarlipi-fonts.css" >/dev/null
+```
+
+Purging only the `.ttf` files leaves the specimen rendering the previous
+release, which is the confusing half: the downloads are right and the page is
+wrong. Check with `curl -sI <url> | grep x-jsd-version`, and remember a
+browser that has already loaded the old file keeps it for a week — a hard
+reload is the only thing that shifts it.
+
 ### Fixed
 
 - **The tivra bar now sits on Ma, not on the dot line.** In the fonts, every
@@ -21,9 +45,12 @@ API, so a change to either that breaks a consumer's CSS is a breaking change.
   bar does not move when a dot is added, and a dot on a bar lands at the same
   y as a dot on a bare letter.
 
-  The bar's own height is unchanged and still shorter than the renderer's
-  (0.16em against 0.26em) — it is Noto's `U+030D` glyph as it ships, and
-  rescaling it would mean reworking its variable deltas.
+- **The tivra bar is the renderer's height.** Noto's `U+030D` is a 164-unit
+  stroke where the renderer draws 260 (200 in Bengali), and a stubbier bar
+  floating higher was the same mismatch twice over. The glyph's top edge moves
+  and nothing else does: the ink bottom the anchors are computed from stays
+  put, the 80-unit width already matched the renderer's 0.08em, and the weight
+  deltas stay Noto's, so the bar still grows with the letters.
 
 ## 0.1.2
 
