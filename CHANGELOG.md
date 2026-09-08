@@ -4,6 +4,26 @@ All notable changes to `swarlipi`. Versions follow [semver](https://semver.org):
 the rendered markup and the class names in `style.css` are part of the public
 API, so a change to either that breaks a consumer's CSS is a breaking change.
 
+## 0.1.2
+
+### Added
+
+- **Every script font now carries Noto Sans's basic Latin** — letters, digits
+  and punctuation, with the same weight axis and Noto's own kerning. Two
+  reasons. Apple's Pages, Keynote and Numbers list only fonts that cover the
+  system language, so on an English-language Mac a Latin-less font is missing
+  from their font menu even though Font Book and the system Fonts panel show
+  it; with Latin in the file, CoreText tags the font `en` and it appears. And a
+  line that mixes English words with sargam — a heading, a section label — now
+  stays in one face. Roman sargam (`english` notation) takes the six marks in
+  these fonts too, though the above marks sit on the script's mark line, which
+  is higher than Latin capitals; Noto Sans remains the natural face for
+  Latin-only notation.
+
+  The letters come from the `full` build in the same pinned Noto release the
+  script letters come from; nothing is drawn or re-anchored differently. File
+  size grows with the glyph count: Gurmukhi roughly 53 → 90 KB (TTF).
+
 ## 0.1.1
 
 ### Fixed

@@ -18,12 +18,22 @@ possibly dropped.
 A font cannot stretch a chhand arc or a meend bar across letters. Those stay
 the renderer's job. The fonts are for everything the renderer cannot reach.
 
-There is no Swarlipi Latin font, because Latin already has one: **Noto Sans**
-carries all six marks natively and anchors them, which is where the script
-fonts borrow theirs from. Set copied `english` notation in Noto Sans and it is
-correct. The catch is that not every Latin font has the tivra mark (U+030D) —
-Apple's San Francisco and Times both lack it, so tivra in a system font falls
-back to another face and can land off-centre.
+Each script font also carries **Noto Sans's basic Latin** — letters, digits and
+punctuation on the same weight axis — so a heading or a section label can sit
+in the same face as the sargam. It is also what gets the fonts into Apple's
+menus: Pages, Keynote and Numbers list only fonts that cover the system
+language, so on an English-language Mac a font without Latin is missing from
+their font popup even though Font Book and the system Fonts panel (Format →
+Font → Show Fonts) show it.
+
+There is no separate Swarlipi Latin font, because Latin already has one:
+**Noto Sans** carries all six marks natively and anchors them, which is where
+the script fonts borrow theirs from. Set copied `english` notation in Noto Sans
+and it is correct. Roman sargam set in a Swarlipi script font works too, though
+its above marks sit on that script's mark line, higher than Latin capitals. The
+catch with system fonts is that not every Latin font has the tivra mark
+(U+030D) — Apple's San Francisco and Times both lack it, so tivra in a system
+font falls back to another face and can land off-centre.
 
 ## On the web
 
@@ -45,7 +55,7 @@ rules. Any npm CDN serves them:
 
 The families are `Swarlipi Gurmukhi`, `Swarlipi Devanagari` and
 `Swarlipi Bengali`. `@0.1` follows patch releases, so a font fix reaches you;
-pin an exact version (`swarlipi@0.1.0`) if you would rather nothing moved.
+pin an exact version (`swarlipi@0.1.2`) if you would rather nothing moved.
 
 ## On a desktop
 

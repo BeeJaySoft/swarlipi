@@ -112,12 +112,17 @@ install format) and `.woff2` (for the web), plus `swarlipi-fonts.css` with the
 Desktop install: download the `.ttf` from the same directory, for example
 `https://cdn.jsdelivr.net/npm/swarlipi@0.1/fonts/SwarlipiGurmukhi-Variable.ttf`,
 and double-click it. `@0.1` follows patch releases; pin an exact version
-(`swarlipi@0.1.0`) if you would rather nothing moved.
+(`swarlipi@0.1.2`) if you would rather nothing moved.
 
-No Latin font is built: **Noto Sans** already carries all six marks with
-anchors (it is where the script fonts borrow theirs), so copied `english`
-notation set in Noto Sans is correct. Note that San Francisco and Times lack
-the tivra mark (U+030D), so tivra in a system font falls back to another face.
+Each script font also carries **Noto Sans's basic Latin** (letters, digits,
+punctuation, same weight axis), so a heading or section label can share the
+face with the sargam. It is also what gets the fonts into Apple's menus:
+Pages, Keynote and Numbers list only fonts that cover the system language,
+which on an English-language Mac hides a Latin-less font from their font
+popup. No separate Latin font is built: for Latin-only `english` notation,
+**Noto Sans** already carries all six marks with anchors (it is where the
+script fonts borrow theirs). Note that San Francisco and Times lack the tivra
+mark (U+030D), so tivra in a system font falls back to another face.
 
 Two formats, two jobs: `.woff2` for `@font-face` (a third of the bytes, and
 every browser since 2016 takes it), `.ttf` to install (nothing installs a

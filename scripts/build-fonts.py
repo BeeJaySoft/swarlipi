@@ -69,7 +69,7 @@ OUT_DEFAULT = PKG / "fonts"
 
 FAMILY = "Swarlipi"
 VENDOR_ID = "SWLP"
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 HOMEPAGE = "https://swarlipi.beejaysoft.com"
 
 # Pinned upstream releases (notofonts GitHub). Bump deliberately.
@@ -122,9 +122,14 @@ def fetch(cache: Path, key: str) -> Path:
     return z
 
 
-def load_variable(z: Path, fam: str) -> TTFont:
+def load_variable(z: Path, fam: str, build: str = "unhinted") -> TTFont:
+    """Noto ships each script twice: `unhinted` is script-only, `full` adds Noto
+    Sans's Latin (letters, digits, punctuation) with the same weight axis. The
+    script fonts load `full`: Apple's Pages/Keynote/Numbers list only fonts that
+    cover the system language, so a Latin-less font is invisible on an English
+    Mac, and mixed English + sargam lines then stay in one face."""
     with zipfile.ZipFile(z) as zf:
-        want = f"{fam}/unhinted/slim-variable-ttf/{fam}[wght].ttf"
+        want = f"{fam}/{build}/slim-variable-ttf/{fam}[wght].ttf"
         names = [n for n in zf.namelist() if n.endswith(want)]
         if not names:
             raise SystemExit(f"{want} not in {z.name}")
@@ -372,6 +377,17 @@ def register_feature(table, tag: str, idx: int) -> None:
             rec.Feature.LookupListIndex.append(idx)
             rec.Feature.LookupCount = len(rec.Feature.LookupListIndex)
     for sr in table.ScriptList.ScriptRecord:
+        if sr.Script.DefaultLangSys is None:
+            # Noto's `full` builds ship GSUB `latn` with language systems (MOL,
+            # ROM — for locl) but no default one, so plain Latin text saw nothing
+            # registered here and the komal kept its narrow macron on Roman
+            # letters. Give the script a default so the feature reaches it.
+            ls = ot.LangSys()
+            ls.LookupOrder = None
+            ls.ReqFeatureIndex = 0xFFFF
+            ls.FeatureIndex = []
+            ls.FeatureCount = 0
+            sr.Script.DefaultLangSys = ls
         langsys = [sr.Script.DefaultLangSys] + [lr.LangSys for lr in sr.Script.LangSysRecord]
         for ls in langsys:
             if ls is None or any(feats[fi].FeatureTag == tag for fi in ls.FeatureIndex):
@@ -598,7 +614,7 @@ def lift_ascender(font: TTFont, marks: dict[int, str], above_line: int) -> None:
 
 def build_one(cache: Path, script: str, out: Path) -> Path:
     repo, fam, ver = NOTO[script]
-    font = load_variable(fetch(cache, script), fam)
+    font = load_variable(fetch(cache, script), fam, build="full")
     latin = load_variable(fetch(cache, "latin"), NOTO["latin"][1])
     marks = add_marks(font, latin)
     variants, right_matras = komal_variants(font, marks[0x0331], script)
