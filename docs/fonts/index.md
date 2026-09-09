@@ -1,6 +1,6 @@
 # Fonts
 
-Three variable fonts, one per Indic script, so notation copied out of the
+Four variable fonts, one per Indic script, so notation copied out of the
 renderer keeps its marks in Word, Pages, a PDF or a chat app. Download one,
 double-click it, choose the family in the application.
 
@@ -65,11 +65,11 @@ the font the destination uses. Most script fonts carry no Latin combining
 marks, so a shaper mixes fonts inside the cluster and the mark comes out
 misplaced or as a box.
 
-The Swarlipi fonts close that gap: Noto Sans Gurmukhi, Devanagari and Bengali
-with the six marks added and anchored to every letter. Text copied from the
-renderer, set in the matching Swarlipi face, shapes letters and marks from one
-font, so it reads the same in Word, Pages, a PDF or a chat app that has the
-font installed. The text stays plain Unicode: in any other font it still reads,
+The Swarlipi fonts close that gap: Noto Sans Gurmukhi, Devanagari, Bengali and
+Gujarati with the six marks added and anchored to every letter. Text copied
+from the renderer, set in the matching Swarlipi face, shapes letters and marks
+from one font, so it reads the same in Word, Pages, a PDF or a chat app that
+has the font installed. The text stays plain Unicode: in any other font it still reads,
 with the marks possibly dropped.
 
 A font cannot stretch a chhand arc or a meend bar across letters. Those stay
