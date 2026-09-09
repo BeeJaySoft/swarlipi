@@ -1,8 +1,13 @@
 // The letter, bol and digit tables per script. A module rather than JSON so
 // the built package imports it the same way in bundlers and in Node.
+//
+// Keyed by SCRIPT — the letterform set — not by language, because several
+// languages share one set: Marathi, Nepali and Konkani notation is `devanagari`,
+// the very same letters Hindi uses, so they belong in a host app's language
+// list mapped onto a script rather than duplicated here.
 const tables = {
   letters: {
-    punjabi: {
+    gurmukhi: {
       s: 'ਸ',
       r: 'ਰੇ',
       g: 'ਗ',
@@ -11,7 +16,7 @@ const tables = {
       d: 'ਧ',
       n: 'ਨੀ',
     },
-    hindi: {
+    devanagari: {
       s: 'स',
       r: 'रे',
       g: 'ग',
@@ -20,7 +25,7 @@ const tables = {
       d: 'ध',
       n: 'नी',
     },
-    bangla: {
+    bengali: {
       s: 'স',
       r: 'রে',
       g: 'গ',
@@ -29,7 +34,16 @@ const tables = {
       d: 'ধ',
       n: 'নী',
     },
-    english: {
+    gujarati: {
+      s: 'સ',
+      r: 'રે',
+      g: 'ગ',
+      m: 'મ',
+      p: 'પ',
+      d: 'ધ',
+      n: 'ની',
+    },
+    latin: {
       s: 'S',
       r: 'R',
       g: 'G',
@@ -40,28 +54,35 @@ const tables = {
     },
   },
   bols: {
-    punjabi: {
+    gurmukhi: {
       ';': 'ਦ',
       "'": 'ਰ',
       '[': 'ਦਾ',
       ']': 'ਰਾ',
       '\\': 'ਦਿਰ',
     },
-    hindi: {
+    devanagari: {
       ';': 'द',
       "'": 'र',
       '[': 'दा',
       ']': 'रा',
       '\\': 'दिर',
     },
-    bangla: {
+    bengali: {
       ';': 'দ',
       "'": 'র',
       '[': 'দা',
       ']': 'রা',
       '\\': 'দির',
     },
-    english: {
+    gujarati: {
+      ';': 'દ',
+      "'": 'ર',
+      '[': 'દા',
+      ']': 'રા',
+      '\\': 'દિર',
+    },
+    latin: {
       ';': 'da',
       "'": 'ra',
       '[': 'daa',
@@ -70,10 +91,11 @@ const tables = {
     },
   },
   digits: {
-    punjabi: '੦੧੨੩੪੫੬੭੮੯',
-    hindi: '०१२३४५६७८९',
-    bangla: '০১২৩৪৫৬৭৮৯',
-    english: '0123456789',
+    gurmukhi: '੦੧੨੩੪੫੬੭੮੯',
+    devanagari: '०१२३४५६७८९',
+    bengali: '০১২৩৪৫৬৭৮৯',
+    gujarati: '૦૧૨૩૪૫૬૭૮૯',
+    latin: '0123456789',
   },
   text: {
     '-': '–',

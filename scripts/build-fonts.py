@@ -54,6 +54,7 @@ import copy
 import io
 import os
 import sys
+import unicodedata
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -71,7 +72,7 @@ OUT_DEFAULT = PKG / "fonts"
 
 FAMILY = "Swarlipi"
 VENDOR_ID = "SWLP"
-VERSION = "0.1.3"
+VERSION = "0.2.0"
 HOMEPAGE = "https://swarlipi.beejaysoft.com"
 
 # Pinned upstream releases (notofonts GitHub). Bump deliberately.
@@ -80,12 +81,19 @@ NOTO = {
     "gurmukhi": ("gurmukhi", "NotoSansGurmukhi", "v2.004"),
     "devanagari": ("devanagari", "NotoSansDevanagari", "v2.006"),
     "bengali": ("bengali", "NotoSansBengali", "v3.011"),
+    "gujarati": ("gujarati", "NotoSansGujarati", "v2.106"),
 }
-SCRIPTS = {"gurmukhi": "Gurmukhi", "devanagari": "Devanagari", "bengali": "Bengali"}
+SCRIPTS = {
+    "gurmukhi": "Gurmukhi",
+    "devanagari": "Devanagari",
+    "bengali": "Bengali",
+    "gujarati": "Gujarati",
+}
 SCRIPT_RANGES = {
     "gurmukhi": range(0x0A05, 0x0A4E),
     "devanagari": range(0x0905, 0x094D),
     "bengali": range(0x0985, 0x09CD),
+    "gujarati": range(0x0A85, 0x0ACD),
 }
 
 MARKS = {
@@ -102,18 +110,45 @@ KOMAL_THICK = 60  # at wght 400; grows with the letters via gvar
 BUCKET = 50  # underline width buckets (font units)
 # Spacing vowel signs that widen a sargam cluster: post-base (right) and, in
 # Bengali, pre-base (left, reordered before the consonant by the shaper).
-RIGHT_MATRAS = {"gurmukhi": (0x0A40, 0x0A3E), "devanagari": (0x0940, 0x093E), "bengali": (0x09C0, 0x09BE)}
-LEFT_MATRAS = {"gurmukhi": (), "devanagari": (), "bengali": (0x09C7, 0x09C8)}
-NI = {"gurmukhi": 0x0A28, "devanagari": 0x0928, "bengali": 0x09A8}
+RIGHT_MATRAS = {
+    "gurmukhi": (0x0A40, 0x0A3E),
+    "devanagari": (0x0940, 0x093E),
+    "bengali": (0x09C0, 0x09BE),
+    "gujarati": (0x0AC0, 0x0ABE),
+}
+# Only Bengali's Re takes a pre-base matra. Gujarati's ે is a non-spacing
+# above-base sign, like Devanagari's, so its Re needs no shift.
+LEFT_MATRAS = {
+    "gurmukhi": (),
+    "devanagari": (),
+    "bengali": (0x09C7, 0x09C8),
+    "gujarati": (),
+}
+NI = {
+    "gurmukhi": 0x0A28,
+    "devanagari": 0x0928,
+    "bengali": 0x09A8,
+    "gujarati": 0x0AA8,
+}
 # Ma is the ONLY letter that takes a tivra bar, and it is the shortest sargam
 # letter in every script (ink top 622 against 896/917 for the tallest matra).
 # So the bar gets its own anchor line off Ma's ink instead of riding the dots'
 # line, which has to clear Ni's matra — that is what left the bar floating
 # ~0.33em over Ma where the CSS renderer sets it ~0.03em clear.
-MA = {"gurmukhi": 0x0A2E, "devanagari": 0x092E, "bengali": 0x09AE}
+MA = {
+    "gurmukhi": 0x0A2E,
+    "devanagari": 0x092E,
+    "bengali": 0x09AE,
+    "gujarati": 0x0AAE,
+}
 # Bar height, mirroring the renderer's `--sl-tivra-h` per script. Noto's own
 # U+030D is a 164-unit stroke, noticeably stubbier than the bar the app draws.
-TIVRA_H = {"gurmukhi": 260, "devanagari": 260, "bengali": 200}
+TIVRA_H = {
+    "gurmukhi": 260,
+    "devanagari": 260,
+    "bengali": 200,
+    "gujarati": 260,
+}
 ABOVE_CLEARANCE = 50  # above the tallest base/matra ink
 BELOW_LINE = -70  # just under the baseline; sargam letters carry no below-matras
 
@@ -432,10 +467,33 @@ def register_feature(table, tag: str, idx: int) -> None:
 
 
 def base_glyphs(font: TTFont) -> list[str]:
+    """Every glyph a mark may attach to.
+
+    GDEF's GlyphClassDef is allowed to be INCOMPLETE, and an unclassified glyph
+    is a base by default — so "class 1" is not the test, "not classified as
+    something else" is. Noto Sans Gujarati is the case that proves it: it lists
+    564 glyphs and leaves its own base letters out entirely, so requiring class
+    1 anchored 484 conjuncts and not one sargam letter. The renderer was fine
+    (it draws marks in CSS) and only the copied-out plain text was wrong — the
+    same split that hid the floating tivra bar before.
+
+    Class 3 (mark) is the one we must exclude; a mark that also got base anchors
+    would be positioned twice. Non-spacing marks are excluded by Unicode
+    category too, since a font that omits its bases may well omit its marks.
+    """
     cd = font["GDEF"].table.GlyphClassDef.classDefs
+    # Reverse cmap, to read each glyph's Unicode category where it has one.
+    cps = {}
+    for cp, name in font.getBestCmap().items():
+        cps.setdefault(name, cp)
     out = []
     for name in font.getGlyphOrder():
-        if cd.get(name) != 1 or font["hmtx"][name][0] == 0:
+        # 1 = base, 2 = ligature, 4 = component; unclassified (None) is a base.
+        # Only 3 (mark) is disqualifying.
+        if cd.get(name, 1) == 3 or font["hmtx"][name][0] == 0:
+            continue
+        cp = cps.get(name)
+        if cp is not None and unicodedata.category(chr(cp)) in ("Mn", "Me"):
             continue
         if glyph_bounds(font, name) is None:
             continue

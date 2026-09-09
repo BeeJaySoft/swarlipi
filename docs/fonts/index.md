@@ -12,17 +12,18 @@ TTF is the install format: double-click works on macOS, Windows and Linux, and
 Word, Pages and LibreOffice all read a variable TTF. The `.woff2` files beside
 them are only for `@font-face`; nothing installs a WOFF2.
 
-## The three faces
+## The four faces
 
 | Family                | Script     | Weight axis | WOFF2  |
 | --------------------- | ---------- | ----------- | ------ |
-| `Swarlipi Gurmukhi`   | Gurmukhi   | 400 – 700   | 42 KB  |
-| `Swarlipi Devanagari` | Devanagari | 400 – 700   | 108 KB |
-| `Swarlipi Bengali`    | Bengali    | 400 – 700   | 100 KB |
+| `Swarlipi Gurmukhi`   | Gurmukhi   | 400 – 700   | 43 KB  |
+| `Swarlipi Devanagari` | Devanagari | 400 – 700   | 110 KB |
+| `Swarlipi Bengali`    | Bengali    | 400 – 700   | 101 KB |
+| `Swarlipi Gujarati`   | Gujarati   | 400 – 700   | 87 KB  |
 
 There is no Swarlipi Latin, because Latin already has one: **Noto Sans**
 carries all six marks natively and anchors them, which is where the script
-fonts borrow theirs from. Set copied `english` notation in Noto Sans and it is
+fonts borrow theirs from. Set copied `latin` notation in Noto Sans and it is
 correct. Roman sargam set in a Swarlipi script font works too, though its above
 marks sit on that script's mark line, higher than Latin capitals. The catch
 with system fonts is that not every Latin font has the tivra mark (U+030D) —
@@ -45,7 +46,7 @@ rules. Any npm CDN serves them:
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/swarlipi@0.1/fonts/swarlipi-fonts.css"
+  href="https://cdn.jsdelivr.net/npm/swarlipi@0.2/fonts/swarlipi-fonts.css"
 />
 ```
 

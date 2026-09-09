@@ -3,7 +3,8 @@
 Fontless Bhatkhande (Hindustani) notation renderer. Turns the compact ASCII
 notation grammar (`s r g m`, `R G M D N` for komal/tivra, `u`/`l` octave
 markers, `{kan}`, chhand `@#$%^&*`, meend `q w W e`, ghaseet `Q E`, bols
-`; ' [ ] \`) into real Unicode text in Gurmukhi, Devanagari, Bengali or Latin,
+`; ' [ ] \`) into real Unicode text in Gurmukhi, Devanagari, Bengali, Gujarati
+or Latin,
 with every notation mark drawn by CSS and inline SVG instead of a custom font.
 
 - Framework-agnostic: returns an HTML string. SSR-safe, no DOM access.
@@ -31,8 +32,10 @@ The input grammar is the character mapping of the **Omenad Bhatkhande fonts**
 swaras, capitals for komal and tivra, `u l U L` for the octaves, `{ }` for kan,
 `@#$%^&*` for chhand, `q w W e` / `Q E` for meend and ghaseet, `; ' [ ] \` for
 the bols. Notation typed for those fonts renders in Swarlipi unchanged —
-nothing to convert — and the four scripts correspond to the four faces. What
-changes is the output: real text instead of glyph substitution.
+nothing to convert — and those four map onto Swarlipi's `gurmukhi`,
+`devanagari`, `bengali` and `latin`. (`gujarati` has no Omenad counterpart; the
+same keymap produces it.) What changes is the output: real text instead of glyph
+substitution.
 
 ## Usage
 
@@ -40,16 +43,33 @@ changes is the output: real text instead of glyph substitution.
 import { renderSwarlipi, swarlipiWrapperClass } from 'swarlipi';
 import 'swarlipi/style.css';
 
-const html = renderSwarlipi('@sr{g}m', 'punjabi');
+const html = renderSwarlipi('@sr{g}m', 'gurmukhi');
 // <span class="sl-ch"><span class="sl-n">ਸ</span>…</span>
 
-element.className = swarlipiWrapperClass('punjabi'); // "sl-wrap sl-punjabi"
+element.className = swarlipiWrapperClass('gurmukhi');
+// "sl-wrap sl-gurmukhi sl-punjabi"  (the original class comes too)
 element.innerHTML = html;
 ```
 
 The wrapper element must carry `swarlipiWrapperClass(script)`; the stylesheet
-keys every mark position off the `.sl-<script>` class. Scripts: `punjabi`,
-`hindi`, `bangla`, `english`.
+keys every mark position off the `.sl-<script>` class.
+
+| Script         | Letters         | Face                 |
+| -------------- | --------------- | -------------------- |
+| `'gurmukhi'`   | ਸ ਰੇ ਗ ਮ ਪ ਧ ਨੀ | Noto Sans Gurmukhi   |
+| `'devanagari'` | स रे ग म प ध नी | Noto Sans Devanagari |
+| `'bengali'`    | স রে গ ম প ধ নী | Noto Sans Bengali    |
+| `'gujarati'`   | સ રે ગ મ પ ધ ની | Noto Sans Gujarati   |
+| `'latin'`      | S R G M P D N   | Noto Sans            |
+
+A script id names a **letterform set, not a language** — several languages share
+one. Marathi, Nepali and Konkani notation is `'devanagari'`, the same letters
+Hindi uses, so a language belongs in your own language list mapped onto one of
+these rather than duplicated here. A script is here only when Bhatkhande
+notation is actually published in it.
+
+The original four ids `punjabi`, `hindi`, `bangla` and `english` are still accepted as
+aliases, and their `.sl-` classes are still emitted, so no migration is needed.
 
 ### Contract (things an integrator may touch)
 
@@ -78,7 +98,7 @@ exactly the dot's top. Override the dot line if you must; let the bar follow.
 
 ```ts
 import { toUnicodeNotation } from 'swarlipi';
-toUnicodeNotation('Rl', 'hindi'); // "रे̱̣"  (letter + combining marks)
+toUnicodeNotation('Rl', 'devanagari'); // "रे̱̣"  (letter + combining marks)
 ```
 
 Marks are Unicode combining characters placed **after** the whole letter
@@ -97,20 +117,21 @@ role; the font is for "everything else": Word, Pages, PDFs, anywhere the copied
 text lands and the font is installed.
 
 The package ships them under `fonts/`: `SwarlipiGurmukhi-Variable`,
-`SwarlipiDevanagari-Variable` and `SwarlipiBengali-Variable` as `.ttf` (the
-install format) and `.woff2` (for the web), plus `swarlipi-fonts.css` with the
-`@font-face` rules and the OFL `LICENSE`. Any npm CDN serves them:
+`SwarlipiDevanagari-Variable`, `SwarlipiBengali-Variable` and
+`SwarlipiGujarati-Variable` as `.ttf` (the install format) and `.woff2` (for the
+web), plus `swarlipi-fonts.css` with the `@font-face` rules and the OFL
+`LICENSE`. Any npm CDN serves them:
 
 ```html
-<!-- one link; families "Swarlipi Gurmukhi" / "Swarlipi Devanagari" / "Swarlipi Bengali" -->
+<!-- one link; families "Swarlipi Gurmukhi" / "Devanagari" / "Bengali" / "Gujarati" -->
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/swarlipi@0.1/fonts/swarlipi-fonts.css"
+  href="https://cdn.jsdelivr.net/npm/swarlipi@0.2/fonts/swarlipi-fonts.css"
 />
 ```
 
 Desktop install: download the `.ttf` from the same directory, for example
-`https://cdn.jsdelivr.net/npm/swarlipi@0.1/fonts/SwarlipiGurmukhi-Variable.ttf`,
+`https://cdn.jsdelivr.net/npm/swarlipi@0.2/fonts/SwarlipiGurmukhi-Variable.ttf`,
 and double-click it.
 
 Each script font also carries **Noto Sans's basic Latin** (letters, digits,

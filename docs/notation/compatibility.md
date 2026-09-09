@@ -3,8 +3,9 @@
 Swarlipi's input is the character mapping of the **Omenad Bhatkhande fonts**,
 OmeBhatkhande Punjabi, Hindi, Bangla and English. Every ASCII character means
 what it meant in those fonts, so notation typed for them renders in Swarlipi
-unchanged. There is nothing to convert and nothing to re-key, and the four
-scripts correspond to the four faces.
+unchanged. There is nothing to convert and nothing to re-key, and those four
+faces map onto Swarlipi's `gurmukhi`, `devanagari`, `bengali` and `latin`.
+`gujarati` has no Omenad counterpart — the same keymap produces it.
 
 What changes is the output. A font substitutes glyphs for the characters you
 typed, so the text underneath stays `sRgM`. Swarlipi produces the real letters

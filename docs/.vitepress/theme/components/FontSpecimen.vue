@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { toUnicodeNotation, type SwarlipiScript } from 'swarlipi';
+import { toUnicodeNotation } from 'swarlipi';
 import { lang } from '../state';
 import ScriptSwitch from './ScriptSwitch.vue';
 
@@ -10,18 +10,21 @@ import ScriptSwitch from './ScriptSwitch.vue';
  * in Word or a PDF when notation is copied out. Latin has no Swarlipi face
  * because Noto Sans already carries all six marks.
  */
-const FAMILY: Record<SwarlipiScript, string> = {
-  punjabi: 'Swarlipi Gurmukhi',
-  hindi: 'Swarlipi Devanagari',
-  bangla: 'Swarlipi Bengali',
-  english: 'Noto Sans',
+const FAMILY: Record<string, string> = {
+  gurmukhi: 'Swarlipi Gurmukhi',
+  devanagari: 'Swarlipi Devanagari',
+  bengali: 'Swarlipi Bengali',
+  gujarati: 'Swarlipi Gujarati',
+  latin: 'Noto Sans',
 };
 
 /* One phrase everywhere, the ascending scale: komal, tivra and a taar dot in
    the places they actually occur. */
 const SCALE = 's R g m M p D n su';
 
-const family = computed(() => `'${FAMILY[lang.value]}', sans-serif`);
+const family = computed(
+  () => `'${FAMILY[lang.value] ?? 'Noto Sans'}', sans-serif`
+);
 const scale = computed(() => toUnicodeNotation(SCALE, lang.value));
 const WEIGHTS = [400, 500, 600, 700];
 </script>

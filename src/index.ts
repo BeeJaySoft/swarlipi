@@ -85,7 +85,50 @@ const CHHAND_SYMBOLS = ['@', '#', '$', '%', '^', '&', '*'] as const;
 export const escapeHtml = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-export type SwarlipiScript = 'punjabi' | 'hindi' | 'bangla' | 'english';
+/**
+ * A script id names a LETTERFORM SET, not a language — several languages share
+ * one. Marathi, Nepali and Konkani notation is `devanagari`, the very same
+ * letters Hindi uses, so a language belongs in the host app's language list
+ * mapped onto one of these, never duplicated here.
+ *
+ * A script is added only when Bhatkhande notation is actually PUBLISHED in it —
+ * Assamese and Kannada were both prepared and withdrawn for want of a source,
+ * even though Assamese costs almost nothing (it is the Bengali face plus ৰ).
+ */
+export type SwarlipiScript =
+  | 'gurmukhi'
+  | 'devanagari'
+  | 'bengali'
+  | 'gujarati'
+  | 'latin';
+
+/**
+ * The original ids, which named languages instead of scripts. Accepted wherever
+ * a script is, so existing callers, stored cookies and published pages keep
+ * rendering unchanged.
+ */
+export type SwarlipiScriptAlias = 'punjabi' | 'hindi' | 'bangla' | 'english';
+
+/** What every public entry point takes: a script id or an original-name alias. */
+export type SwarlipiScriptInput = SwarlipiScript | SwarlipiScriptAlias;
+
+const SCRIPT_ALIASES: Record<SwarlipiScriptAlias, SwarlipiScript> = {
+  punjabi: 'gurmukhi',
+  hindi: 'devanagari',
+  bangla: 'bengali',
+  english: 'latin',
+};
+
+/**
+ * The original class a script also carries, so a consumer stylesheet targeting
+ * `.sl-punjabi` keeps working. Scripts added since have no alias.
+ */
+const LEGACY_CLASS: Partial<Record<SwarlipiScript, SwarlipiScriptAlias>> = {
+  gurmukhi: 'punjabi',
+  devanagari: 'hindi',
+  bengali: 'bangla',
+  latin: 'english',
+};
 
 /** Letterforms, mizrab bols and numerals per script. */
 const LETTERS = tables.letters as Record<
@@ -108,16 +151,43 @@ const PREBASE_MATRA =
 const SPACING_MATRA = /\p{Mc}/u;
 
 const BOLS = tables.bols as Record<SwarlipiScript, Record<string, string>>;
+/**
+ * The mizrab-bol input characters, as a set. Membership is script-independent —
+ * every script's table is keyed by the same five characters — so the tokenizer
+ * tests against this rather than reaching into whichever script's table happens
+ * to be handy (which quietly became a lookup for a renamed key).
+ */
+const BOL_CHARS = new Set(Object.keys(BOLS.latin));
 const DIGITS = tables.digits as Record<SwarlipiScript, string>;
 /** Characters that render as a different glyph: the two dashes. */
 const TEXT = tables.text as Record<string, string>;
 
 /**
+ * Canonical script id for whatever a caller passed, falling back to `latin` for
+ * anything unrecognised (the id can come from an unvalidated cookie during SSR,
+ * so this degrades rather than throwing).
+ *
+ * MUST run before any LETTERS lookup. The original ids are no longer table keys,
+ * so an unresolved `punjabi` would fail a `LETTERS[lang]` guard and silently
+ * render Latin — the failure mode that looks like nothing broke.
+ */
+function resolveScript(lang: SwarlipiScriptInput): SwarlipiScript {
+  const canonical = SCRIPT_ALIASES[lang as SwarlipiScriptAlias] ?? lang;
+  return LETTERS[canonical as SwarlipiScript]
+    ? (canonical as SwarlipiScript)
+    : 'latin';
+}
+
+/**
  * Classes for the element that receives renderSwarlipi() output —
  * activates the swarlipi.css rules and the per-script mark calibration.
+ * Carries the original class alongside the canonical one where there is one,
+ * so a host stylesheet written against `.sl-bangla` still applies.
  */
-export function swarlipiWrapperClass(lang: SwarlipiScript): string {
-  return `sl-wrap sl-${lang}`;
+export function swarlipiWrapperClass(lang: SwarlipiScriptInput): string {
+  const script = resolveScript(lang);
+  const legacy = LEGACY_CLASS[script];
+  return `sl-wrap sl-${script}${legacy ? ` sl-${legacy}` : ''}`;
 }
 
 // Mizrab ke bol (strokes): ; ' [ ] \  →  da ra daa raa dir.
@@ -325,7 +395,7 @@ function tokenizeRun(
       continue;
     }
 
-    if (BOLS.english[ch] !== undefined) {
+    if (BOL_CHARS.has(ch)) {
       // Dir spans two note-slots and carries the chhand swoosh under it.
       tokens.push({ kind: 'bol', ch, dir: ch === '\\', s, e: s + 1 });
       i += 1;
@@ -616,11 +686,14 @@ const COMBINING = {
  * meend markers have no Unicode form and are omitted; bols and digits use
  * their script forms.
  */
-export function toUnicodeNotation(notes: string, lang: SwarlipiScript): string {
+export function toUnicodeNotation(
+  notes: string,
+  lang: SwarlipiScriptInput
+): string {
   if (!notes) return '';
-  const safeLang: SwarlipiScript = LETTERS[lang] ? lang : 'english';
+  const script = resolveScript(lang);
   return tokenize(notes)
-    .map((t) => tokenToText(t, safeLang))
+    .map((t) => tokenToText(t, script))
     .join('');
 }
 
@@ -649,16 +722,13 @@ interface Ctx {
 
 export function renderSwarlipi(
   notes: string,
-  lang: SwarlipiScript,
+  lang: SwarlipiScriptInput,
   options: SwarlipiRenderOptions = {}
 ): string {
   if (!notes) return '';
-  // The language can come from an unvalidated cookie during SSR — degrade to
-  // English rather than throwing on an unknown key.
-  const safeLang: SwarlipiScript = LETTERS[lang] ? lang : 'english';
   const tokens = tokenize(notes);
   return assemble(tokens, 0, tokens.length, {
-    lang: safeLang,
+    lang: resolveScript(lang),
     noteClass: options.noteClass,
     editing: options.editing,
   }).html;

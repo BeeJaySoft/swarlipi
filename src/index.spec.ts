@@ -29,8 +29,15 @@ describe('toUnicodeNotation', () => {
 
 describe('swarlipiWrapperClass', () => {
   it('builds wrapper classes', () => {
-    expect(swarlipiWrapperClass('punjabi')).toBe('sl-wrap sl-punjabi');
-    expect(swarlipiWrapperClass('hindi')).toBe('sl-wrap sl-hindi');
+    // Canonical script first, then the original class it replaces.
+    expect(swarlipiWrapperClass('gurmukhi')).toBe(
+      'sl-wrap sl-gurmukhi sl-punjabi'
+    );
+    expect(swarlipiWrapperClass('devanagari')).toBe(
+      'sl-wrap sl-devanagari sl-hindi'
+    );
+    // Scripts added after the rename have no alias, so they carry one class.
+    expect(swarlipiWrapperClass('gujarati')).toBe('sl-wrap sl-gujarati');
   });
 });
 
@@ -79,15 +86,48 @@ describe('renderSwarlipi — letters and marks', () => {
     expect(hasClass(renderSwarlipi('nu', 'english'), 'sl-mat')).toBe(false);
   });
 
-  it('tags Bangla Re with sl-matp — a pre-base matra puts the consonant right', () => {
-    expect(hasClass(renderSwarlipi('ru', 'bangla'), 'sl-matp')).toBe(true);
-    expect(hasClass(renderSwarlipi('Ru', 'bangla'), 'sl-matp')).toBe(true);
-    // Bangla only — the other scripts' Re matra is above-base, zero advance.
-    for (const lang of ['punjabi', 'hindi', 'english'] as SwarlipiScript[])
+  it('tags Bengali Re with sl-matp — a pre-base matra puts the consonant right', () => {
+    for (const lang of ['bengali'] as SwarlipiScript[]) {
+      expect(hasClass(renderSwarlipi('ru', lang), 'sl-matp')).toBe(true);
+      expect(hasClass(renderSwarlipi('Ru', lang), 'sl-matp')).toBe(true);
+      // Mutually exclusive, or Ni's dot would swing right instead of left.
+      expect(hasClass(renderSwarlipi('nu', lang), 'sl-mat')).toBe(true);
+      expect(hasClass(renderSwarlipi('nu', lang), 'sl-matp')).toBe(false);
+    }
+    // Every other script's Re matra is above-base with zero advance.
+    for (const lang of [
+      'gurmukhi',
+      'devanagari',
+      'gujarati',
+      'latin',
+    ] as SwarlipiScript[])
       expect(hasClass(renderSwarlipi('ru', lang), 'sl-matp')).toBe(false);
-    // Mutually exclusive, or Ni's dot would swing right instead of left.
-    expect(hasClass(renderSwarlipi('nu', 'bangla'), 'sl-mat')).toBe(true);
-    expect(hasClass(renderSwarlipi('nu', 'bangla'), 'sl-matp')).toBe(false);
+  });
+
+  it('accepts the original language ids as aliases for their scripts', () => {
+    // The app passes these straight from a cookie, so they must resolve BEFORE
+    // the table lookup — an unresolved id would silently render Latin.
+    const pairs = [
+      ['punjabi', 'gurmukhi'],
+      ['hindi', 'devanagari'],
+      ['bangla', 'bengali'],
+      ['english', 'latin'],
+    ] as const;
+    for (const [alias, script] of pairs) {
+      expect(renderSwarlipi('s R g nu', alias)).toBe(
+        renderSwarlipi('s R g nu', script)
+      );
+      expect(toUnicodeNotation('s R g nu', alias)).toBe(
+        toUnicodeNotation('s R g nu', script)
+      );
+      // The wrapper carries both, so a stylesheet written against either works.
+      expect(swarlipiWrapperClass(alias)).toContain(`sl-${script}`);
+      expect(swarlipiWrapperClass(alias)).toContain(`sl-${alias}`);
+    }
+    // Unknown ids still degrade to Latin rather than throwing.
+    expect(renderSwarlipi('s', 'klingon' as SwarlipiScript)).toBe(
+      renderSwarlipi('s', 'latin')
+    );
   });
 
   it('escapes characters with no notation meaning', () => {
@@ -147,7 +187,7 @@ describe('renderSwarlipi — chhand', () => {
 describe('renderSwarlipi — meend and ghaseet', () => {
   // Rendered shape WITHOUT the source offsets: those map a caret index back to
   // the raw text, so they SHOULD differ when the characters sit elsewhere.
-  const shape = (notes: string, lang: SwarlipiScript = 'punjabi') =>
+  const shape = (notes: string, lang: SwarlipiScript = 'gurmukhi') =>
     renderSwarlipi(notes, lang).replace(/ data-[se]="\d+"/g, '');
 
   it('wraps a matched q..e span with hooks and bar', () => {
@@ -201,7 +241,7 @@ describe('renderSwarlipi — meend and ghaseet', () => {
       ['rW', 'Wr'],
       ['nuW', 'Wnu'],
     ] as const) {
-      expect(shape(trailing, 'bangla')).toBe(shape(leading, 'bangla'));
+      expect(shape(trailing, 'bengali')).toBe(shape(leading, 'bengali'));
     }
   });
 
@@ -460,10 +500,10 @@ describe('renderSwarlipi — strokes, digits, misc', () => {
     expect(renderSwarlipi('', 'punjabi')).toBe('');
   });
 
-  it('falls back to English for an unknown language instead of throwing', () => {
+  it('falls back to Latin for an unknown script instead of throwing', () => {
     const html = renderSwarlipi(
       's123;',
-      'gurmukhi' as unknown as Parameters<typeof renderSwarlipi>[1]
+      'marathi' as unknown as Parameters<typeof renderSwarlipi>[1]
     );
     expect(html).toContain('S');
     expect(html).toMatch(/1.*2.*3/);
@@ -598,7 +638,7 @@ describe('MEEND_BAR_RATIO', () => {
 describe('octave dot columns', () => {
   const css = readFileSync(new URL('./index.css', import.meta.url), 'utf-8');
 
-  it('pins the Bangla Re column to the consonant centre, not just past 50%', () => {
+  it('pins the Bengali Re column to the consonant centre, not just past 50%', () => {
     // Advances from Noto Sans Bengali at weight 500 — the weight .sl-wrap
     // paints at. A pre-base matra puts the consonant last, so
     // its centre is (matra + consonant/2) / cluster. Tight tolerance on
@@ -609,8 +649,8 @@ describe('octave dot columns', () => {
     const RA = 598; // র
     const EKAR = CLUSTER - RA;
     const expected = ((EKAR + RA / 2) / CLUSTER) * 100;
-    const bangla = /\.sl-bangla \{([^}]*)\}/.exec(css);
-    const declared = /--sl-matp-dot:\s*([\d.]+)%/.exec(bangla?.[1] ?? '');
+    const bengali = /\.sl-bengali \{([^}]*)\}/.exec(css);
+    const declared = /--sl-matp-dot:\s*([\d.]+)%/.exec(bengali?.[1] ?? '');
     expect(declared).not.toBeNull();
     expect(Number(declared?.[1])).toBeCloseTo(expected, 1);
   });
@@ -622,5 +662,49 @@ describe('octave dot columns', () => {
     expect(css).toMatch(
       /\.sl-wrap \.sl-matp \{[^}]*--sl-dx:\s*var\(--sl-matp-dot/
     );
+  });
+});
+
+describe('script coverage', () => {
+  const css = readFileSync(new URL('./index.css', import.meta.url), 'utf-8');
+  // Every script the type admits. Kept as a literal so adding a script to the
+  // union without adding it here fails typecheck rather than silently skipping.
+  const SCRIPTS: SwarlipiScript[] = [
+    'gurmukhi',
+    'devanagari',
+    'bengali',
+    'gujarati',
+    'latin',
+  ];
+
+  it.each(SCRIPTS)('%s renders all seven swaras and its own digits', (s) => {
+    const html = renderSwarlipi('s r g m p d n 1 2 3', s);
+    // No swara may fall through to a raw ASCII letter — that is what a missing
+    // table entry looks like, and it renders without erroring.
+    expect(html).not.toMatch(/>[srgmpdn]</);
+    expect(toUnicodeNotation('1', s)).not.toBe('1$');
+    expect(toUnicodeNotation('s r g m p d n', s).length).toBeGreaterThan(6);
+  });
+
+  it.each(SCRIPTS)(
+    '%s has a --font-sl and a calibration block in the CSS',
+    (s) => {
+      // The bug this catches: a script in the union with no `.sl-<script>` block
+      // inherits :root's Gurmukhi-calibrated marks and resolves --font-sl to
+      // nothing, so it renders in an OS fallback with the wrong mark offsets —
+      // visibly broken, with nothing in the console.
+      const block = new RegExp(`\\.sl-${s}[^{]*\\{[^}]*--font-sl:`, 's');
+      expect(block.test(css), `.sl-${s} must set --font-sl`).toBe(true);
+    }
+  );
+
+  it('gives every script a distinct set of letters', () => {
+    // Two scripts rendering identically would mean a duplicate table
+    // pretending to be a script — which is what a language id would be.
+    const rendered = new Map(
+      SCRIPTS.map((s) => [s, toUnicodeNotation('s r g m p d n', s)])
+    );
+    const seen = new Set(rendered.values());
+    expect(seen.size, 'two scripts render identically').toBe(SCRIPTS.length);
   });
 });

@@ -15,10 +15,11 @@ the DOM, so it runs the same on the server and in the browser.
 import { renderSwarlipi, swarlipiWrapperClass } from 'swarlipi';
 import 'swarlipi/style.css';
 
-const html = renderSwarlipi('{g}#srm', 'punjabi');
+const html = renderSwarlipi('{g}#srm', 'gurmukhi');
 // <sup class="sl-kan"><span class="sl-n">ਗ</span></sup><span class="sl-ch">…</span>
 
-element.className = swarlipiWrapperClass('punjabi'); // "sl-wrap sl-punjabi"
+element.className = swarlipiWrapperClass('gurmukhi');
+// "sl-wrap sl-gurmukhi sl-punjabi" — the original class comes too
 element.innerHTML = html;
 ```
 
@@ -29,12 +30,23 @@ The stylesheet keys every mark position off the `.sl-<script>` class, and
 `.sl-wrap` carries the run's own font-size and line-height, so put it on an
 **inner** element and size the element around it.
 
-| Script      | Letters                    |
-| ----------- | -------------------------- |
-| `'punjabi'` | Gurmukhi ਸ ਰੇ ਗ ਮ ਪ ਧ ਨੀ   |
-| `'hindi'`   | Devanagari स रे ग म प ध नी |
-| `'bangla'`  | Bengali স রে গ ম প ধ নী    |
-| `'english'` | Latin S R G M P D N        |
+| Script         | Letters         | Face                 |
+| -------------- | --------------- | -------------------- |
+| `'gurmukhi'`   | ਸ ਰੇ ਗ ਮ ਪ ਧ ਨੀ | Noto Sans Gurmukhi   |
+| `'devanagari'` | स रे ग म प ध नी | Noto Sans Devanagari |
+| `'bengali'`    | স রে গ ম প ধ নী | Noto Sans Bengali    |
+| `'gujarati'`   | સ રે ગ મ પ ધ ની | Noto Sans Gujarati   |
+| `'latin'`      | S R G M P D N   | Noto Sans            |
+
+A script id names a **letterform set, not a language**. Several languages share
+one: Marathi, Nepali and Konkani notation is `'devanagari'`, the very same
+letters Hindi uses — so a language belongs in your own language list, mapped
+onto one of these. A script is here only when Bhatkhande notation is actually
+published in it.
+
+The original four ids `'punjabi'`, `'hindi'`, `'bangla'` and `'english'` still work
+everywhere as aliases, and their `.sl-` classes are still emitted alongside the
+canonical ones, so existing code and stored preferences need no migration.
 
 ## Load the fonts
 
@@ -45,14 +57,14 @@ The simplest way is the Google Fonts stylesheet this site uses:
 ```html
 <link
   rel="stylesheet"
-  href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gurmukhi:wght@400..700&family=Noto+Sans+Devanagari:wght@400..700&family=Noto+Sans+Bengali:wght@400..700&family=Noto+Sans:wght@400..700&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gurmukhi:wght@400..700&family=Noto+Sans+Devanagari:wght@400..700&family=Noto+Sans+Bengali:wght@400..700&family=Noto+Sans+Gujarati:wght@400..700&family=Noto+Sans:wght@400..700&display=swap"
 />
 ```
 
 Self-hosting, or another face, is one variable per script:
 
 ```css
-.sl-punjabi {
+.sl-gurmukhi {
   --font-sl: 'My Gurmukhi', sans-serif;
 }
 ```
@@ -65,17 +77,34 @@ against it before shipping.
 
 Any face works, but the marks are placed against the em box while the letters
 are placed against the baseline, so a face whose baseline sits elsewhere needs
-two variables re-derived per script: `--sl-baseline`, which you can measure
-with a zero-height inline-block probe inside the run, and `--sl-dot-a-top`,
-which is `baseline − tallest ink − 0.075 − 0.15` (the dot clears the tallest
-letter by 0.075em and is 0.15em tall). The tivra bar and the mandra line follow
-from the dot line on their own.
+two variables re-derived per script: `--sl-baseline`, the baseline's position
+in a 1em box, and `--sl-dot-a-top`, the one dot line.
 
-**Baloo** as a worked example — rounded, and one of the two families that cover
-all three Indic scripts with a weight axis:
+The dot line has to satisfy **two** constraints, and the lower of the two wins:
+
+```
+by letters:  baseline − tallest sargam ink − 0.075 − 0.15
+by the bar:  baseline − Ma's ink − 0.028 − (tivra bar height) − 0.06 − 0.15
+```
+
+In the Indic scripts the first governs — Re and Ni tower over Ma, so the bar
+fits in the gap for free. Latin is the case that needs the second: `M` is both
+its tivra letter and its tallest, so a line set from the letters alone puts the
+bar straight through the letter. The mandra line and the chhand arc follow from
+the dot line on their own.
+
+Both are derivable from font metrics rather than measured by eye — this repo's
+`packages/swarlipi/scripts/calibrate.py` reads them out of the font files and
+`--check`s them against the stylesheet, which is how the shipped numbers are
+kept honest across Noto releases.
+
+**Baloo** as a worked example — rounded, and one of the two families covering
+the Indic scripts with a weight axis (values below were derived for Gurmukhi,
+Devanagari and Bengali; Gujarati needs the same two re-derived for Baloo Bhai
+2):
 
 ```css
-.sl-punjabi {
+.sl-gurmukhi {
   --font-sl: 'Baloo Paaji 2', sans-serif;
   --sl-baseline: 0.775em;
   --sl-dot-a-top: -0.299em;
@@ -113,7 +142,7 @@ chhand symbol with no notes under it yet draws its full arc over empty slots,
 sized like the real thing.
 
 ```ts
-renderSwarlipi('@', 'hindi', { editing: true });
+renderSwarlipi('@', 'devanagari', { editing: true });
 ```
 
 <SwaraRow notes="$s" editing />
@@ -126,7 +155,7 @@ for komal, a vertical line above for tivra.
 
 ```ts
 import { toUnicodeNotation } from 'swarlipi';
-toUnicodeNotation('Rl', 'hindi'); // "रे̱̣"
+toUnicodeNotation('Rl', 'devanagari'); // "रे̱̣"
 ```
 
 It is a one-way export for reading. Chhand, meend and ghaseet markers have no
@@ -139,5 +168,5 @@ marks are drawn depends on the destination font; the
 
 - [Integration](/guide/integration): what a host does around the renderer,
   from a drawn caret to cross-beat glides and print.
-- [Symbols](/notation/): every mark, live, in all four scripts.
+- [Symbols](/notation/): every mark, live, in every script.
 - [Omenad compatibility](/notation/compatibility): why existing notation just works.

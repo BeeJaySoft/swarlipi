@@ -1,18 +1,19 @@
 <script setup lang="ts">
 /**
- * The three install downloads. A component rather than three hand-written
+ * The install downloads, one per face. A component rather than hand-written
  * anchors in the markdown: the icon is written once, and the sizes live in one
  * place instead of being repeated per card.
  */
-const CDN = 'https://cdn.jsdelivr.net/npm/swarlipi@0.1/fonts';
+const CDN = 'https://cdn.jsdelivr.net/npm/swarlipi@0.2/fonts';
 const FONTS = [
-  { label: 'Gurmukhi', file: 'SwarlipiGurmukhi-Variable.ttf', size: '97 KB' },
+  { label: 'Gurmukhi', file: 'SwarlipiGurmukhi-Variable.ttf', size: '100 KB' },
   {
     label: 'Devanagari',
     file: 'SwarlipiDevanagari-Variable.ttf',
-    size: '321 KB',
+    size: '326 KB',
   },
-  { label: 'Bengali', file: 'SwarlipiBengali-Variable.ttf', size: '221 KB' },
+  { label: 'Bengali', file: 'SwarlipiBengali-Variable.ttf', size: '223 KB' },
+  { label: 'Gujarati', file: 'SwarlipiGujarati-Variable.ttf', size: '269 KB' },
 ];
 </script>
 

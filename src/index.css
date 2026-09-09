@@ -101,7 +101,7 @@
    they were calibrated against the wrong letter heights — Latin's cap is only
    0.724em against the Indic 0.896em, and its dot floated 0.251em clear.
    The meend bar derives from this line (see --sl-mbr-top), so it follows. */
-.sl-punjabi {
+.sl-gurmukhi {
   --font-sl: 'Noto Sans Gurmukhi', sans-serif;
   /* Dot lines are set for >=1px clearance over the tallest ink (ਰੇ hora /
      ਨੀ bihari) AT THE READ VIEW'S 17px, where the dot's border snaps up a
@@ -114,7 +114,7 @@
   --sl-underline-off: 0.1em;
   --sl-mat-dot: 35.5%;
 }
-.sl-hindi {
+.sl-devanagari {
   --font-sl: 'Noto Sans Devanagari', sans-serif;
   /* नी bihari is the tallest Devanagari ink — clears it by ~1px at 17px. */
   --sl-dot-a-top: -0.381em;
@@ -122,7 +122,7 @@
   --sl-underline-off: 0.1em;
   --sl-mat-dot: 34%;
 }
-.sl-bangla {
+.sl-bengali {
   --font-sl: 'Noto Sans Bengali', sans-serif;
   /* Bengali নী's ী reaches 0.909em against 0.692em for every other letter, so
      the single line sits well clear of the short ones. That is the reference
@@ -144,7 +144,19 @@
      fallback Bengali face reads 66.8%. */
   --sl-matp-dot: 69.2%;
 }
-.sl-english {
+.sl-gujarati {
+  --font-sl: 'Noto Sans Gujarati', sans-serif;
+  /* Structurally Devanagari: રે's ે is a non-spacing above-base sign (so Re
+     needs no half-cluster shift) and ની's ી is a post-base spacing one. Ma's
+     ink is 0.603em against 0.896em for the tallest (રે / ની), so the tivra bar
+     tucks into that gap and the letters govern the dot line, exactly as in
+     Devanagari. Derived by scripts/calibrate.py from NotoSansGujarati-v2.106. */
+  --sl-dot-a-top: -0.377em;
+  --sl-baseline: 0.744em;
+  --sl-underline-off: 0.1em;
+  --sl-mat-dot: 33.7%;
+}
+.sl-latin {
   /* Explicit stack — `inherit` would pick up an ancestor's notation font
      (e.g. a notation face on .note-value) and defeat the swarlipi render. */
   --font-sl: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
@@ -358,7 +370,7 @@
 }
 /* The mirror of .sl-mat: a pre-base matra puts the vowel sign LEFT, so the
    consonant — the note, and the letter's optical mass — sits in the right half.
-   Bangla রে is the only such case in the four scripts; the offset and its
+   Bengali রে is the only such case in the five scripts; the offset and its
    derivation live on --sl-matp-dot. */
 .sl-wrap .sl-matp {
   --sl-dx: var(--sl-matp-dot, 50%);

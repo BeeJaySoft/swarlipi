@@ -8,6 +8,7 @@ import {
   escapeHtml,
   MEEND_BAR_RATIO,
   type SwarlipiScript,
+  type SwarlipiScriptInput,
   type SwarlipiRenderOptions,
 } from 'swarlipi';
 import 'swarlipi/style.css';
@@ -21,9 +22,28 @@ import { SYMBOL_GROUPS } from 'swarlipi/reference';
 Renders one beat's notation as an HTML string. Never touches the DOM.
 
 - `notes: string`: the beat, in the [Omenad keymap](/notation/compatibility).
-- `script: SwarlipiScript`: `'punjabi' | 'hindi' | 'bangla' | 'english'`. An
-  unknown value degrades to `'english'` rather than throwing, since the value
-  often comes from a cookie.
+- `script: SwarlipiScriptInput`: one of
+
+  | `SwarlipiScript` | Letters         | Face                 |
+  | ---------------- | --------------- | -------------------- |
+  | `'gurmukhi'`     | ਸ ਰੇ ਗ ਮ ਪ ਧ ਨੀ | Noto Sans Gurmukhi   |
+  | `'devanagari'`   | स रे ग म प ध नी | Noto Sans Devanagari |
+  | `'bengali'`      | স রে গ ম প ধ নী | Noto Sans Bengali    |
+  | `'gujarati'`     | સ રે ગ મ પ ધ ની | Noto Sans Gujarati   |
+  | `'latin'`        | S R G M P D N   | Noto Sans            |
+
+  A script id names a **letterform set, not a language** — several languages
+  share one. Marathi, Nepali and Konkani notation is `'devanagari'`, the very
+  same letters Hindi uses, so a language belongs in your own language list
+  mapped onto one of these.
+
+  A script is here only when Bhatkhande notation is actually published in it.
+
+  The original four ids `'punjabi' | 'hindi' | 'bangla' | 'english'` are still
+  accepted everywhere as aliases for `gurmukhi | devanagari | bengali | latin`,
+  so existing code and stored cookies keep working. An unknown value degrades
+  to `'latin'` rather than throwing, since the value often comes from a cookie.
+
 - `options.noteClass?: (swara: string, octave?: string) => string | undefined`:
   extra class(es) for a note's `.sl-n`.
 - `options.editing?: boolean`: draw half-typed markers over empty slots.
@@ -32,7 +52,10 @@ Returns `''` for an empty string.
 
 ## `swarlipiWrapperClass(script)`
 
-The class list the receiving element must carry: `"sl-wrap sl-<script>"`.
+The class list the receiving element must carry: `"sl-wrap sl-<script>"`. Where
+the script has an original-name alias, its class comes too
+(`"sl-wrap sl-bengali sl-bangla"`), so a stylesheet written against either name
+still applies.
 
 ## `toUnicodeNotation(notes, script)`
 
@@ -41,7 +64,7 @@ Marks are placed after the whole letter cluster, never between a consonant and
 its vowel sign, which would split the syllable in CoreText and Word.
 
 ```ts
-toUnicodeNotation('Rl', 'hindi'); // "रे̱̣"  komal Re, mandra
+toUnicodeNotation('Rl', 'devanagari'); // "रे̱̣"  komal Re, mandra
 ```
 
 ### What survives
@@ -53,7 +76,7 @@ toUnicodeNotation('Rl', 'hindi'); // "रे̱̣"  komal Re, mandra
 | tivra `M`              | U+030D combining vertical line above         |
 | octaves `u U l L`      | U+0307, U+0308, U+0323, U+0324               |
 | kan `{p}`, murki `(r)` | parentheses around the notes                 |
-| bols `; ' [ ] \`       | their letters (`;` → ਦ / द / দ)              |
+| bols `; ' [ ] \`       | their letters (`;` → ਦ / द / দ / દ / ದ)      |
 | digits `1 2 3`         | the script's digits                          |
 | `-` and `_`            | en dash and em dash                          |
 

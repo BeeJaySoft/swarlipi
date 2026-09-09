@@ -15,7 +15,7 @@ const props = withDefaults(
     editing?: boolean;
     bold?: boolean;
   }>(),
-  { lang: 'punjabi', size: '1.75rem', editing: false, bold: false }
+  { lang: 'gurmukhi', size: '1.75rem', editing: false, bold: false }
 );
 
 const html = computed(() =>

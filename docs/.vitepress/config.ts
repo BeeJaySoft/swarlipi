@@ -1,13 +1,25 @@
 import { defineConfig } from 'vitepress';
 
 // The renderer's default faces. The stylesheet does not fetch fonts; the site
-// loads the four Noto families the way an integrator would.
+// loads the Noto families the way an integrator would. Load-bearing, not
+// decoration: a script whose face is missing renders in an OS fallback whose
+// letter heights the mark calibration was never measured against, so the dots
+// and bars land wrong — visibly, and with nothing in the console.
+const NOTO_FAMILIES = [
+  'Noto+Sans+Gurmukhi',
+  'Noto+Sans+Devanagari',
+  'Noto+Sans+Bengali',
+  'Noto+Sans+Gujarati',
+  'Noto+Sans',
+];
 const FONTS =
-  'https://fonts.googleapis.com/css2?family=Noto+Sans+Gurmukhi:wght@400..700&family=Noto+Sans+Devanagari:wght@400..700&family=Noto+Sans+Bengali:wght@400..700&family=Noto+Sans:wght@400..700&display=swap';
+  'https://fonts.googleapis.com/css2?' +
+  NOTO_FAMILIES.map((f) => `family=${f}:wght@400..700`).join('&') +
+  '&display=swap';
 
 // The package's own fonts, served from npm the way the page tells you to.
 const SWARLIPI_FONTS =
-  'https://cdn.jsdelivr.net/npm/swarlipi@0.1/fonts/swarlipi-fonts.css';
+  'https://cdn.jsdelivr.net/npm/swarlipi@0.2/fonts/swarlipi-fonts.css';
 
 // One sidebar for the whole site. At seven pages a per-section sidebar hides
 // more than it focuses: this way every page shows where else there is to go.
@@ -35,7 +47,7 @@ const DOCS_SIDEBAR = [
 export default defineConfig({
   title: 'Swarlipi',
   description:
-    'Bhatkhande notation as real Unicode text, in four scripts, with no notation font.',
+    'Bhatkhande notation as real Unicode text, in five scripts, with no notation font.',
   lang: 'en',
   cleanUrls: true,
   head: [

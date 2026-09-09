@@ -42,7 +42,7 @@ withDefaults(
   display: block;
   margin-bottom: 0.5rem;
 }
-/* Cells take their content's width and wrap: a long beat in four scripts is
+/* Cells take their content's width and wrap: a long beat in five scripts is
  * wider than one line, and fixed quarters would run the runs into each other. */
 .sw-row-scripts {
   display: flex;

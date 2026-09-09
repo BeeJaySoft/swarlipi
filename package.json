@@ -1,6 +1,6 @@
 {
   "name": "swarlipi",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "private": false,
   "description": "Fontless Bhatkhande notation renderer — real Unicode letters plus CSS/SVG marks, in four scripts.",
   "license": "MIT AND OFL-1.1",
@@ -73,7 +73,7 @@
     "build:dist": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
     "build:fonts": "python3 scripts/build-fonts.py",
     "prepublishOnly": "node -e \"const ua=process.env.npm_config_user_agent||'';if(!ua.includes('pnpm')){console.error('\\\\n  Publish with pnpm, not npm.\\\\n  npm ignores publishConfig field overrides, so it would ship a manifest whose main/types/exports point at src/*.ts.\\\\n  Run: pnpm publish --access public\\\\n');process.exit(1)}\"",
-    "prepack": "pnpm run build:dist && pnpm run build:fonts && node -e \"const fs=require('fs');const need=['dist/index.js','dist/index.d.ts','dist/bridge.js','src/index.css','fonts/swarlipi-fonts.css','fonts/SwarlipiGurmukhi-Variable.ttf','fonts/SwarlipiGurmukhi-Variable.woff2'];const missing=need.filter(f=>!fs.existsSync(f));if(missing.length){console.error('\\\\n  Refusing to pack: built output missing\\\\n   '+missing.join('\\\\n   ')+'\\\\n');process.exit(1)}\" && node --input-type=module -e \"import('./dist/index.js').then(m=>{if(typeof m.renderSwarlipi!=='function')throw new Error('dist/index.js exports no renderSwarlipi');return import('./dist/bridge.js')}).then(m=>{if(typeof m.planBridges!=='function')throw new Error('dist/bridge.js exports no planBridges')}).catch(e=>{console.error('\\\\n  Refusing to pack: dist does not load under Node ESM\\\\n   '+e.message+'\\\\n');process.exit(1)})\"",
+    "prepack": "pnpm run build:dist && pnpm run build:fonts && node -e \"const fs=require('fs');const faces=['Gurmukhi','Devanagari','Bengali','Gujarati'];const need=['dist/index.js','dist/index.d.ts','dist/bridge.js','src/index.css','fonts/swarlipi-fonts.css',...faces.flatMap(f=>['ttf','woff2'].map(e=>`fonts/Swarlipi${f}-Variable.${e}`))];const missing=need.filter(f=>!fs.existsSync(f));if(missing.length){console.error('\\\\n  Refusing to pack: built output missing\\\\n   '+missing.join('\\\\n   ')+'\\\\n');process.exit(1)}\" && node --input-type=module -e \"import('./dist/index.js').then(m=>{if(typeof m.renderSwarlipi!=='function')throw new Error('dist/index.js exports no renderSwarlipi');return import('./dist/bridge.js')}).then(m=>{if(typeof m.planBridges!=='function')throw new Error('dist/bridge.js exports no planBridges')}).catch(e=>{console.error('\\\\n  Refusing to pack: dist does not load under Node ESM\\\\n   '+e.message+'\\\\n');process.exit(1)})\"",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "docs:dev": "vitepress dev docs --port 5178",
