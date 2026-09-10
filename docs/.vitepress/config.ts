@@ -44,6 +44,9 @@ const DOCS_SIDEBAR = [
   { text: 'Fonts', link: '/fonts/' },
 ];
 
+// Absolute base for link-preview URLs; crawlers do not resolve relative paths.
+const SITE_URL = 'https://swarlipi.beejaysoft.com/';
+
 export default defineConfig({
   title: 'Swarlipi',
   description:
@@ -59,6 +62,54 @@ export default defineConfig({
     ['link', { rel: 'stylesheet', href: FONTS }],
     // The Swarlipi faces themselves, for the specimen on /fonts/.
     ['link', { rel: 'stylesheet', href: SWARLIPI_FONTS }],
+    // Link previews. VitePress emits title/description into <head> but no
+    // og:/twitter: tags, so shares render as a bare card with just the domain.
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:site_name', content: 'Swarlipi' }],
+    [
+      'meta',
+      {
+        property: 'og:title',
+        content: 'Swarlipi — Bhatkhande notation without a notation font',
+      },
+    ],
+    [
+      'meta',
+      {
+        property: 'og:description',
+        content:
+          'Real Unicode letters in Gurmukhi, Devanagari, Bengali, Gujarati or Latin, with every mark drawn by CSS and SVG. It copies, it searches, it prints.',
+      },
+    ],
+    ['meta', { property: 'og:url', content: SITE_URL }],
+    ['meta', { property: 'og:image', content: `${SITE_URL}og-image.png` }],
+    ['meta', { property: 'og:image:width', content: '1200' }],
+    ['meta', { property: 'og:image:height', content: '630' }],
+    [
+      'meta',
+      {
+        property: 'og:image:alt',
+        content:
+          'Swarlipi — the same notation rendered in Gurmukhi, Devanagari, Bengali, Gujarati and Latin',
+      },
+    ],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    [
+      'meta',
+      {
+        name: 'twitter:title',
+        content: 'Swarlipi — Bhatkhande notation without a notation font',
+      },
+    ],
+    [
+      'meta',
+      {
+        name: 'twitter:description',
+        content:
+          'Real Unicode letters in five scripts, with every mark drawn by CSS and SVG.',
+      },
+    ],
+    ['meta', { name: 'twitter:image', content: `${SITE_URL}og-image.png` }],
   ],
   themeConfig: {
     // General → showcase → download, with the download in the CTA slot
