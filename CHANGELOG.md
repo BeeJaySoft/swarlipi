@@ -4,6 +4,18 @@ All notable changes to `swarlipi`. Versions follow [semver](https://semver.org):
 the rendered markup and the class names in `style.css` are part of the public
 API, so a change to either that breaks a consumer's CSS is a breaking change.
 
+## Unreleased
+
+### Changed
+
+- The source is public: [github.com/BeeJaySoft/swarlipi](https://github.com/BeeJaySoft/swarlipi)
+  mirrors the package directory of the monorepo it is developed in, and is
+  where issues and pull requests go. `repository` and `bugs` in `package.json`
+  point there, and the docs site links to it.
+- `typescript` and `@types/node` are declared as devDependencies, so a
+  standalone checkout type-checks and builds `dist/` without the monorepo's
+  hoisted copies.
+
 ## 0.2.0
 
 ### Added

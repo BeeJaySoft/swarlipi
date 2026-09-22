@@ -7,8 +7,8 @@
  * bracket — so joining them is element-anchored: consecutive zones along a
  * span are bridged pair by pair at the fragment-bar height. This module
  * measures those bridges; the host owns the beat cells, the spans (which
- * beats pair — see `@np/notation/meend` for the notation app's rules) and
- * when to re-measure.
+ * beats pair is the host's rule, not the renderer's) and when to
+ * re-measure.
  *
  * Two geometries per bar, on purpose:
  *  - The measured one: x endpoints decomposed as beat-cell-center % + a

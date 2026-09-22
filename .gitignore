@@ -1,0 +1,13 @@
+# Build outputs. prepack builds dist/ (tsc) and fonts/ (scripts/build-fonts.py)
+# straight into the npm tarball, so no binary is committed; .noto-cache/ is the
+# ~156MB cache of Noto source zips the font build fetches.
+node_modules/
+dist/
+fonts/
+.noto-cache/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+.netlify/
+.turbo/
+__pycache__/
+*.py[cod]

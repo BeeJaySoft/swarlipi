@@ -1,5 +1,7 @@
 # Swarlipi
 
+![The same Bhatkhande notation rendered in Gurmukhi, Devanagari, Bengali, Gujarati and Latin](docs/public/og-image.png)
+
 Fontless Bhatkhande (Hindustani) notation renderer. Turns the compact ASCII
 notation grammar (`s r g m`, `R G M D N` for komal/tivra, `u`/`l` octave
 markers, `{kan}`, chhand `@#$%^&*`, meend `q w W e`, ghaseet `Q E`, bols
@@ -173,14 +175,26 @@ and CoreText. Known limits: anchor x is static (ink centre at Regular), so a
 bold dot can sit a few units off-centre; Windows Word and LibreOffice are
 untested.
 
+## Source and contributing
+
+Swarlipi is developed inside a private monorepo, alongside the notation app it
+grew out of. [github.com/BeeJaySoft/swarlipi](https://github.com/BeeJaySoft/swarlipi)
+is a mirror of that package directory — same commits, same history, pushed on
+every release and whenever the package changes — and it is where issues and
+pull requests go. A pull request is not merged on the mirror: it is applied to
+the monorepo, lands here with the next push, and is then closed with a pointer
+to the commit that carried it. Scripts are added only on primary-source
+evidence that Bhatkhande notation is published in them; the Gujarati entry in
+`CHANGELOG.md` shows what that evidence looks like.
+
 ## Changelog
 
 See [CHANGELOG.md](./CHANGELOG.md).
 
 ## Releasing
 
-Manual, and deliberately so: the repo's pre-commit hook bumps only
-`apps/app`, never this package. A library's version is a semver judgement
+Manual, and deliberately so: the monorepo's pre-commit hook bumps only
+the app, never this package. A library's version is a semver judgement
 (patch / minor / major), not something a commit should decide.
 
 From a clean `main` checkout, with Python and fontTools available (`prepack`
@@ -189,6 +203,8 @@ builds `dist/` and `fonts/`):
 ```sh
 cd packages/swarlipi
 pnpm version patch --no-git-tag-version   # or minor / major
+# commit the bump and land it on main, then:
+pnpm -w swarlipi:mirror --tag             # push the public source, tag it vX.Y.Z
 pnpm publish --access public
 ```
 
@@ -204,8 +220,9 @@ feature — npm ignores them and would publish a manifest whose entry point is
 reason.
 
 `--no-git-tag-version` matters in a monorepo: a bare `v0.1.1` tag would not say
-which package it belongs to. Commit the bump, and tag it `swarlipi-v0.1.1` if
-you want a tag.
+which package it belongs to. The release tag lives on the public mirror instead:
+`pnpm -w swarlipi:mirror --tag` pushes main's split and tags its tip `v0.1.1`
+there, so the monorepo itself needs no tag.
 
 Forgetting the bump is safe — npm refuses to publish over an existing version,
 so the publish fails loudly rather than shipping the wrong thing. Inspect the
@@ -246,9 +263,9 @@ at a size no screen measurement can predict.
 
 Call it again when the cells move (resize, font load, font-size change) and
 when a beat re-renders: the anchor names are inline styles on rendered output, so a
-re-render drops them. Which beats pair is not the package's call; the notation
-app's rules live in `@np/notation/meend` (adjacent beats pair on `q`/`e`
-alone, longer glides need a `w`/`W` in every beat between).
+re-render drops them. Which beats pair is not the package's call. For
+reference, the notation app this package grew out of pairs adjacent beats on
+`q`/`e` alone and needs a `w`/`W` in every beat between for longer glides.
 
 ## Acknowledgements
 

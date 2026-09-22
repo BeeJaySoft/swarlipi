@@ -43,10 +43,10 @@ import {
 export { MEEND_BAR_RATIO };
 
 // ---------------------------------------------------------------------------
-// Standalone: the three tiny helpers this renderer shares with @np/notation
-// are inlined here so the package has zero runtime dependencies. Keep them in
-// sync with `@np/notation` (kan.ts / notation.ts / roman.ts) — they define
-// the storage grammar, not rendering policy.
+// Standalone: the three tiny helpers this renderer shares with the notation
+// app it grew out of are inlined here so the package has zero runtime
+// dependencies. Keep them in sync with the app's kan / notation / roman
+// modules — they define the storage grammar, not rendering policy.
 
 interface KanSegment {
   type: 'kan' | 'main';

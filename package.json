@@ -6,8 +6,12 @@
   "license": "MIT AND OFL-1.1",
   "author": "BeeJaySoft",
   "homepage": "https://swarlipi.beejaysoft.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BeeJaySoft/swarlipi.git"
+  },
   "bugs": {
-    "url": "https://swarlipi.beejaysoft.com"
+    "url": "https://github.com/BeeJaySoft/swarlipi/issues"
   },
   "engines": {
     "node": ">=18"
@@ -81,7 +85,9 @@
     "docs:preview": "vitepress preview docs --port 5178"
   },
   "devDependencies": {
+    "@types/node": "^25.2.0",
     "@vueuse/core": "^14.2.1",
+    "typescript": "~5.9.3",
     "vitepress": "2.0.0-alpha.17",
     "vitest": "^4.0.18"
   }

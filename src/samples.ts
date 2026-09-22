@@ -19,9 +19,9 @@ export interface CrossBeatSample {
   beats: string[];
   /**
    * Which beats a host pairs into one glide, as `swarlipi/bridge` spans. The
-   * pairing rule belongs to the host, not the renderer (the notation app's is
-   * `extractMeendSpans` in `@np/notation/meend`), so a sample carries the
-   * answer for its own beats. Every sample below sets it, `[]` included — an
+   * pairing rule belongs to the host, not the renderer (the notation app this
+   * package grew out of keeps its own), so a sample carries the answer for its
+   * own beats. Every sample below sets it, `[]` included — an
    * empty list is the "does not pair" case, and an absent one means a consumer
    * built the sample itself and should treat it as unbridged.
    */

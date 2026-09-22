@@ -132,6 +132,16 @@ export default defineConfig({
       '/fonts/': DOCS_SIDEBAR,
     },
     search: { provider: 'local' },
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/BeeJaySoft/swarlipi' },
+      { icon: 'npm', link: 'https://www.npmjs.com/package/swarlipi' },
+    ],
+    // The public repo mirrors the monorepo package: a suggested edit arrives
+    // there as a pull request and is applied upstream by hand.
+    editLink: {
+      pattern: 'https://github.com/BeeJaySoft/swarlipi/edit/main/docs/:path',
+      text: 'Suggest a change to this page',
+    },
     outline: { level: [2, 3] },
     footer: {
       message:

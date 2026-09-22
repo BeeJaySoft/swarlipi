@@ -1,6 +1,9 @@
-# Netlify site for the Swarlipi docs (VitePress). Site settings live in the
-# Netlify UI, like the apps: package directory `packages/swarlipi`, build
-# command `pnpm build:swarlipi-docs`, publish `packages/swarlipi/docs/.vitepress/dist`.
+# Netlify site for the Swarlipi docs (VitePress). The site builds from the
+# np-mono monorepo, not from the public mirror; settings live in the Netlify
+# UI, like the apps: package directory `packages/swarlipi`, build command
+# `pnpm build:swarlipi-docs`, publish `packages/swarlipi/docs/.vitepress/dist`.
+# The ignore script below is the monorepo's. It does not exist in the mirror,
+# so a site connected there would simply build on every push.
 [build]
   ignore = "bash scripts/netlify-ignore.sh swarlipi-docs"
 
