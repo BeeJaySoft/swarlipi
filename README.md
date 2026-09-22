@@ -203,11 +203,17 @@ builds `dist/` and `fonts/`):
 ```sh
 cd packages/swarlipi
 pnpm version patch --no-git-tag-version   # or minor / major
-# commit the bump and land it on main, then:
-pnpm -w swarlipi:mirror --tag             # push the public source, tag it vX.Y.Z
-pnpm publish --access public
-pnpm -w swarlipi:release                  # GitHub release: CHANGELOG notes + the fonts
+# retitle the CHANGELOG's "Unreleased" section to the version, commit, land it
+# on main and push; then, from the repo root:
+pnpm swarlipi:publish
 ```
+
+`swarlipi:publish` checks its preconditions (clean main in sync with origin, a
+version not yet on npm, its CHANGELOG section, npm and GitHub logins, Python
+with fontTools) before pushing anything, then runs three steps and stops at
+the first failure: `pnpm swarlipi:mirror --tag` (public source + `vX.Y.Z` tag),
+`pnpm publish --access public` in this directory, and `pnpm swarlipi:release`
+(GitHub release). Each step can be run by hand in that order.
 
 Never publish with `--ignore-scripts`: `prepack` is what builds `dist/` and
 `fonts/`, and both are git-ignored, so skipping it publishes a package with no
@@ -223,7 +229,7 @@ reason.
 `--no-git-tag-version` matters in a monorepo: a bare `v0.1.1` tag would not say
 which package it belongs to. The release tag lives on the public mirror instead:
 `pnpm -w swarlipi:mirror --tag` pushes main's split and tags its tip `v0.1.1`
-there, so the monorepo itself needs no tag. `pnpm -w swarlipi:release` then turns
+there, so the monorepo itself needs no tag. `pnpm -w swarlipi:release` turns
 that tag into a GitHub release: the notes are the version's `CHANGELOG.md`
 section, and the fonts `prepack` just built are attached as downloads, so the
 release on GitHub always matches what npm shipped.
