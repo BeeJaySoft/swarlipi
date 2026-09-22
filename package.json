@@ -2,7 +2,7 @@
   "name": "swarlipi",
   "version": "0.2.0",
   "private": false,
-  "description": "Fontless Bhatkhande notation renderer — real Unicode letters plus CSS/SVG marks, in five scripts.",
+  "description": "Bhatkhande (Hindustani classical) music notation as real Unicode text, in Gurmukhi, Devanagari, Bengali, Gujarati and Latin — every mark drawn by CSS and SVG, no notation font.",
   "license": "MIT AND OFL-1.1",
   "author": "BeeJaySoft",
   "homepage": "https://swarlipi.beejaysoft.com",
